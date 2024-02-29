@@ -13,9 +13,9 @@ def start(Sensors: list[Sensor], my_model: Model, round_number):
         if round_number % AroundClear == 0:
             sensor.G = 0
 
-        # MCH = member of CH, initially all will have sink as their CH,
+        # cluster_id = member of CH, initially all will have sink as their CH,
         # so if n = 5, then my_model.n = 5 = 6th node (arrays start from 0)
-        sensor.MCH = my_model.n
+        sensor.cluster_id = my_model.n
 
         if sensor.type != 'S':
             sensor.type = 'N'

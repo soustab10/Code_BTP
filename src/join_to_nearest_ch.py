@@ -75,9 +75,9 @@ def start(Sensors: list[Sensor], myModel: Model, TotalCH):
                 # if node is in RR CH and is Nearer to CH rather than Sink
                 if min_dist_from_all_ch[i] <= myModel.RR and min_dist_from_all_ch[i] < sensor.dis2sink:
                     print(f"{sensor.id} is joining {TotalCH[id_of_min_dist_ch[i]]}")
-                    sensor.MCH = TotalCH[id_of_min_dist_ch[i]]
+                    sensor.cluster_id = TotalCH[id_of_min_dist_ch[i]]
                     sensor.dis2ch = min_dist_from_all_ch[i]
                 else:
                     print(f"{sensor.id} is joining sink")
-                    sensor.MCH = total_nodes
+                    sensor.cluster_id = total_nodes
                     sensor.dis2ch = sensor.dis2sink

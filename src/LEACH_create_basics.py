@@ -50,7 +50,7 @@ class Model:
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 100
+        self.rmax = 1
 
         # Data packet size
         self.data_packet_len = 200
@@ -100,9 +100,9 @@ class Sensor:
         self.id = 0
         self.dis2sink: float = 0
         self.dis2ch: float = 0
-        self.MCH = 0  # Member of which CH
+        self.cluster_id = 0  # Member of which CH
         self.RR = 0
-        self.layer_num = 0
+        self.layer_number = 0
         
     
 
@@ -128,7 +128,7 @@ def create_sensors(my_model: Model):
     sensors[n].id = my_model.n
     sensors[n].type = 'S'
     sensors[n].dis2sink = 0
-    sensors[n].layer_num = 6
+    sensors[n].layer_number = 5
 
     for i, sensor in enumerate(sensors[:-1]):
                
@@ -149,10 +149,10 @@ def create_sensors(my_model: Model):
         sensor.id = i
         # Radio range
         sensor.RR = my_model.RR
-        sensor.MCH = n
+        sensor.cluster_id = n
         # Dist to sink
         sensor.dis2sink = sqrt(pow((sensor.xd - sensors[-1].xd), 2) + pow((sensor.yd - sensors[-1].yd), 2))        
-        sensor.layer_num = get_layer_number(sensor.zd)
+        sensor.layer_number = get_layer_number(sensor.zd)
         # print(f'Dist to sink: {sensors[-1].id} for {sensor.id} is {sensor.dis2sink}')
 
     return sensors

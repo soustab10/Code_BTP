@@ -32,7 +32,7 @@ class Model:
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
         self.Eo: float = 0.5
-
+        self.E_threshold = 0.4*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
         self.ETX: float = 10* 10e-12
@@ -100,9 +100,10 @@ class Sensor:
         self.id = 0
         self.dis2sink: float = 0
         self.dis2ch: float = 0
-        self.cluster_id = 0  # Member of which CH
+        self.cluster_id = 0  # Member of which Cluster
         self.RR = 0
         self.layer_number = 0
+        self.hop_count = 0
         
     
 
@@ -149,10 +150,11 @@ def create_sensors(my_model: Model):
         sensor.id = i
         # Radio range
         sensor.RR = my_model.RR
-        sensor.cluster_id = n
+        sensor.cluster_id = 0
         # Dist to sink
         sensor.dis2sink = sqrt(pow((sensor.xd - sensors[-1].xd), 2) + pow((sensor.yd - sensors[-1].yd), 2))        
         sensor.layer_number = get_layer_number(sensor.zd)
+        sensor.hop_count = 5 + 1 - sensor.layer_number
         # print(f'Dist to sink: {sensors[-1].id} for {sensor.id} is {sensor.dis2sink}')
 
     return sensors

@@ -9,7 +9,7 @@ def send_rec(sensors: list[Sensor], sender, sap):
         sap += 1
         print(f'{sender} sent packet. New energy of {sender} = {sensors[sender].E}')
     else:
-        print(f"node {sensors[sender].id} is Dead! :( look how they massacred my node.")
+        print(f"node {sensors[sender]} is Dead! :( look how they massacred my node.")
         sensors[sender].df = 1
 
     return sap
@@ -27,21 +27,21 @@ def start(sensors: list[Sensor], my_model: Model, senders: list, receivers: list
     # Each sender will send to each receiver
     for sender in senders:
         for receiver in receivers:
-            print("########sender is ", sender, "and rec is ", receiver)
+            print("########sender is ", sender.id, "and rec is ", receiver)
             print()
             distance = sqrt(
-                pow(sensors[sender].xd - sensors[receiver].xd, 2) +
-                pow(sensors[sender].yd - sensors[receiver].yd, 2)
+                pow(sensors[sender.id].xd - sensors[receiver].xd, 2) +
+                pow(sensors[sender.id].yd - sensors[receiver].yd, 2)
             )
-            print(f"dist b/w sender: {sender} and receiver: {receiver} is: {distance}")
+            print(f"dist b/w sender: {sender.id} and receiver: {receiver} is: {distance}")
 
             if distance > my_model.do:
-                sensors[sender].E -= my_model.ETX * PacketSize + my_model.Emp * PacketSize * pow(distance, 4)
-                sent_packets = send_rec(sensors, sender, sent_packets)
+                sensors[sender.id].E -= my_model.ETX * PacketSize + my_model.Emp * PacketSize * pow(distance, 4)
+                sent_packets = send_rec(sensors, sender.id, sent_packets)
 
             else:
-                sensors[sender].E -= my_model.ETX * PacketSize + my_model.Efs * PacketSize * pow(distance, 2)
-                sent_packets = send_rec(sensors, sender, sent_packets)
+                sensors[sender.id].E -= my_model.ETX * PacketSize + my_model.Efs * PacketSize * pow(distance, 2)
+                sent_packets = send_rec(sensors, sender.id, sent_packets)
 
     for receiver in receivers:
         sensors[receiver].E -= (my_model.ERX + my_model.EDA) * PacketSize
@@ -51,7 +51,7 @@ def start(sensors: list[Sensor], my_model: Model, senders: list, receivers: list
     # the energy of receiver will be wasted but it will not receive any packet
     for sender in senders:
         for receiver in receivers:
-            if sensors[receiver].E > 0 and sensors[sender].E > 0:
+            if sensors[receiver].E > 0 and sensors[sender.id].E > 0:
                 # Received a Packet
                 rec_packets += 1
                 print(f'{receiver} received a packet, new energy of {receiver} = {sensors[receiver].E}')

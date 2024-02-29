@@ -24,11 +24,11 @@ def start(sensors: list[Sensor], my_model: Model, sender, sender_rr):
 
     for i, sensor in enumerate(sensors[:-1]):
         distance[i] = sqrt(
-            pow(sensor.xd - sensors[sender].xd, 2) + pow(sensor.yd - sensors[sender].yd, 2)
+            pow(sensor.xd - sensors[sender.id].xd, 2) + pow(sensor.yd - sensors[sender.id].yd, 2)
         )
         
         # node should be in RR
-        if distance[i] <= sender_rr and sender != sensor.id:
+        if distance[i] <= sender_rr and sender.id != sensor.id:
             receiver.append(sensor.id)
             # Todo: UNCOMMENT
             # print(f"{sender} has reciever: {sensor.id}")

@@ -121,11 +121,11 @@ class LEACHSimulation:
         print()
 
         self.__create_sen()
-        # self.__plot_sensors()
+        
         # self.__print_sensors()
-        self.__start_simulation()
+        # self.__start_simulation()
         self.__main_loop()
-
+        # self.__plot_sensors()s
         # Todo: all plotting should be done in Leach_plotter file
         # plt.xlim(left=0, right=self.my_model.rmax)
         # plt.ylim(bottom=0, top=self.n)
@@ -194,9 +194,12 @@ class LEACHSimulation:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        x_vals = [node.xd for node in self.Sensors]
-        y_vals = [node.yd for node in self.Sensors]
-        z_vals = [node.zd for node in self.Sensors]
+        x_vals = [node.xd for node in self.Sensors if node.type == 'N']
+        y_vals = [node.yd for node in self.Sensors if node.type == 'N']
+        z_vals = [node.zd for node in self.Sensors if node.type == 'N']
+        x_vals_ch = [node.xd for node in self.Sensors if node.type == 'C']
+        y_vals_ch = [node.yd for node in self.Sensors if node.type == 'C']
+        z_vals_ch = [node.zd for node in self.Sensors if node.type == 'C']
 
         sink_x_vals = [x_vals[-1]]
         sink_y_vals = [y_vals[-1]]
@@ -207,6 +210,7 @@ class LEACHSimulation:
         z_vals = z_vals[:-1]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
+        ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
 
         # Plot blue planes at specified heights
         for height in self.layer_heights:
@@ -214,7 +218,7 @@ class LEACHSimulation:
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.3, color="blue")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="blue")
 
         ax.scatter(
             sink_x_vals,
@@ -239,13 +243,48 @@ class LEACHSimulation:
         print("##########################################")
         print()
         ct=0
+        num_clusters = set()
         for sensor in self.Sensors:
             print(sensor.id, sensor.xd, sensor.yd, sensor.zd, sensor.layer_number, sensor.cluster_id, sensor.type)
+            num_clusters.add(sensor.cluster_id)
             if(sensor.type == 'C'):
                 ct+=1
             
         print("Total Number of CHs:", ct)
+        print("Total Number of Clusters:", len(num_clusters))
         print("----------------------------------------------")
+        
+    def plot_clusters(self, layer_number=None):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        cluster_sensors = {}
+        ch_coordinates = {'x': [], 'y': [], 'z': []}
+
+        for sensor in self.Sensors:
+            if sensor.cluster_id not in cluster_sensors:
+                cluster_sensors[sensor.cluster_id] = {'x': [], 'y': [], 'z': []}
+
+            cluster_sensors[sensor.cluster_id]['x'].append(sensor.xd)
+            cluster_sensors[sensor.cluster_id]['y'].append(sensor.yd)
+            cluster_sensors[sensor.cluster_id]['z'].append(sensor.zd)
+
+            if sensor.type == 'C':
+                ch_coordinates['x'].append(sensor.xd)
+                ch_coordinates['y'].append(sensor.yd)
+                ch_coordinates['z'].append(sensor.zd)
+
+        for cluster_id, coordinates in cluster_sensors.items():
+            ax.scatter(coordinates['x'], coordinates['y'], coordinates['z'], label=f'Cluster {cluster_id}')
+
+        ax.scatter(ch_coordinates['x'], ch_coordinates['y'], ch_coordinates['z'], c='black', marker='x', s=100, label='Cluster Heads')
+
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_zlabel('Z-axis')
+        ax.set_title('3D Sensor Network by Cluster with Cluster Heads')
+        plt.legend()
+        plt.show()
 
     def __start_simulation(self):
         print("############################################")
@@ -326,7 +365,7 @@ class LEACHSimulation:
             var_pp(self.Sensors)
 
             # ############# cluster head election #############
-
+            
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
@@ -374,8 +413,8 @@ class LEACHSimulation:
         self.no_of_ch = len(self.list_CH)
 
         # todo: test
-        print("Cluster Heads: ", end="")
-        pp(self.list_CH)
+        print("Cluster Heads: ", self.list_CH)
+        
         # if round_number == 1 and len(self.list_CH) == 0:
         #     exit("EXIT, no CH in initial round")
         print()
@@ -383,7 +422,7 @@ class LEACHSimulation:
         # #########################################################################################
         # ############# Broadcasting CHs to All Sensors that are in Radio Range of CH #############
         # #########################################################################################
-        # self.__broadcast_cluster_head()
+        self.__broadcast_cluster_head()
 
         # ######################################################
         # ############# Sensors join to nearest CH #############
@@ -393,7 +432,7 @@ class LEACHSimulation:
 
         # todo: test
         self.__print_sensors()
-
+        self.plot_clusters()
         # ########################################
         # ############# plot Sensors #############
         # ########################################
@@ -421,18 +460,18 @@ class LEACHSimulation:
 
         # Broadcasting CH x to All Sensors that are in Radio Rage of x. (dont broadcast to sink)
         # Doing this for all CH
-        for ch_id in self.list_CH:
+        for cluster_head in self.list_CH:
             # todo: test
-            print(f"for cluster head: {ch_id}")
+            print(f"for cluster head: {cluster_head}")
             self.receivers: list = findReceiver.start(
                 self.Sensors,
                 self.my_model,
-                sender=ch_id,
-                sender_rr=self.Sensors[ch_id].RR,
+                sender=cluster_head,
+                sender_rr=self.Sensors[cluster_head.id].RR,
             )
 
             # todo: test
-            print("\nsender (or CH): ", ch_id)
+            print("\nsender (or CH): ", cluster_head)
             print("self.Receivers: ", end="")
             print(self.receivers)
 
@@ -440,7 +479,7 @@ class LEACHSimulation:
             self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
                 self.Sensors,
                 self.my_model,
-                [ch_id],
+                [cluster_head],
                 self.receivers,
                 self.srp,
                 self.rrp,
@@ -667,6 +706,7 @@ class LEACHSimulation:
     def perform_clustering(self, k):
         total_depth = abs(self.my_model.z_range[0] - self.my_model.z_range[1])
         CH = []
+        
         # Iterate through layers
         for layer in set(node.layer_number for node in self.Sensors):
             layer_nodes = [node for node in self.Sensors if node.layer_number == layer]
@@ -682,8 +722,9 @@ class LEACHSimulation:
                 n_clusters=k, n_init=10, random_state=0
             )  # Set n_init explicitly
             kmeans.fit(node_coordinates)
-
+            print(kmeans.labels_)
             # Assign each node to its respective cluster
+            
             for i, node in enumerate(layer_nodes):
                 node.cluster_id = kmeans.labels_[i]
 
@@ -691,23 +732,28 @@ class LEACHSimulation:
             self.cluster_centers = kmeans.cluster_centers_
 
             # Select cluster heads based on a fitness function
-            cluster_id_head = 1
-            self.select_cluster_heads(layer_nodes, cluster_id_head, CH)
+            
+            self.select_cluster_heads(layer_nodes, layer, CH)
 
+        
+        
         return CH
 
-    def select_cluster_heads(self, layer_nodes, cluster_id_head, CH):
-
+    def select_cluster_heads(self, layer_nodes, layer, CH):
+        
+        cl_id = 0
         for cluster in set(node.cluster_id for node in layer_nodes):
             cluster_nodes = [node for node in layer_nodes if node.cluster_id == cluster]
             fitness_scores = [self.calculate_fitness(node) for node in cluster_nodes]
             cluster_head = cluster_nodes[fitness_scores.index(min(fitness_scores))]
             for cluster_node in cluster_nodes:
-                cluster_node.cluster_id = cluster_id_head
+                cluster_node.cluster_id = layer*self.my_model.clusters_per_layer+cl_id
 
             cluster_head.type = "C"
+            cluster_head.cluster_id = layer*self.my_model.clusters_per_layer+cl_id
             CH.append(cluster_head)
-            cluster_id_head += 1
+            cl_id+=1
+            
 
     def calculate_fitness(self, node):
         # Assuming k-means clustering has been performed

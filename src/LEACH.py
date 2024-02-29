@@ -389,134 +389,35 @@ class LEACHSimulation:
         print()
         print("Clusters of Current Round:", self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
-        # self.list_CH stores the id of all CH in current round
-
-        self.list_CH = self.perform_clustering(self.my_model.clusters_per_layer)
-        # if(round_number == 1):
-        #     self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number)
-        # else:
-        # # Check if energy of each existing cluster head is below threshold
-        #     clusters_to_re_elect = []
-        #     for cluster_head_id in self.list_CH:
-        #         cluster_head = next((node for node in self.Sensors if node.node_id == cluster_head_id), None)
-        #         if cluster_head and cluster_head.energy < 0.5:  # Adjust ENERGY_THRESHOLD as needed
-        #             clusters_to_re_elect.append(cluster_head.cluster_id)
-
-        #     # Re-elect cluster heads only for clusters with energy below threshold
-        #     if clusters_to_re_elect:
-        #         self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number, clusters_to_re_elect)
-        #         self.no_of_ch = len(self.list_CH)
-        # #add checker if CH has energy below threshold
-        # #store cluster ids of all such clusters
-        # #only re elect chs of those clusters
-        # self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number)
-        self.no_of_ch = len(self.list_CH)
-
-        # todo: test
-        print("Cluster Heads: ", self.list_CH)
-        
-        # if round_number == 1 and len(self.list_CH) == 0:
-        #     exit("EXIT, no CH in initial round")
-        print()
-
-        # #########################################################################################
-        # ############# Broadcasting CHs to All Sensors that are in Radio Range of CH #############
-        # #########################################################################################
-        # self.__broadcast_cluster_head()
-
-        # ######################################################
-        # ############# Sensors join to nearest CH #############
-        # ######################################################
-        # updates dist2ch & cluster_id in node
+        print(self.list_CH)
+        if(round_number == 1):
+            self.list_CH = self.perform_clustering(self.my_model.clusters_per_layer)
+        else:
+            cluster_ids_newch = []
+            for cluster_head in self.list_CH:
+                if(cluster_head.E <= self.my_model.E_threshold):
+                    cluster_head.type = 'N'                    
+                    cluster_ids_newch.append(cluster_head.cluster_id)
+            
+            self.list_CH = [ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch]
+            
+            for c_id in cluster_ids_newch:
+                self.perform_cluster_id_new_ch(c_id,self.list_CH)
+            
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
+        # self.__print_sensors()
+        # self.plot_clusters()        
 
-        # todo: test
-        self.__print_sensors()
-        self.plot_clusters()
-        # ########################################
-        # ############# plot Sensors #############
-        # ########################################
-        # Todo: plot here
-
-        # ##############################################################
-        # ############# end of cluster head election phase #############
-        # ##############################################################
-
-        print("##############################################################")
-        print("############# end of cluster head election phase #############")
-        print("##############################################################")
-
-    def __broadcast_cluster_head(self):
-        print(
-            "#########################################################################################"
-        )
-        print(
-            "############# Broadcasting CHs to All Sensors that are in Radio Range of CH #############"
-        )
-        print(
-            "#########################################################################################"
-        )
-        print()
-
-        # Broadcasting CH x to All Sensors that are in Radio Rage of x. (dont broadcast to sink)
-        # Doing this for all CH
-        for cluster_head in self.list_CH:
-            # todo: test
-            print(f"for cluster head: {cluster_head}")
-            self.receivers: list = findReceiver.start(
-                self.Sensors,
-                self.my_model,
-                sender=cluster_head,
-                sender_rr=self.Sensors[cluster_head.id].RR,
-            )
-
-            # todo: test
-            print("\nsender (or CH): ", cluster_head)
-            print("self.Receivers: ", end="")
-            print(self.receivers)
-
-            # we require the sender parameter of sendReceivePackets.start to be a list.
-            self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
-                self.Sensors,
-                self.my_model,
-                [cluster_head],
-                self.receivers,
-                self.srp,
-                self.rrp,
-                self.sdp,
-                self.rdp,
-                packet_type="Hello",
-            )
-
-            # todo: test
-            print("self.srp", self.srp)
-            print("self.rrp", self.rrp)
-            print("self.sdp", self.sdp)
-            print("self.rdp", self.rdp)
-            print(
-                "Sensors: ",
-            )
-            var_pp(self.Sensors)
-            print()
-
+    
     def __steady_state_phase(self):
         print("##############################################")
         print("############# steady state phase #############")
         print("##############################################")
         print()
 
-        for i in range(
-            self.my_model.NumPacket
-        ):  # Number of Packets to be sent in steady-state phase
+        for i in range(self.my_model.NumPacket):  # Number of Packets to be sent in steady-state phase
 
-            # ########################################
-            # ############# plot Sensors #############
-            # ########################################
-            # todo: Plot here
-
-            # #############################################################
-            # ############# All sensor send data packet to CH #############
-            # #############################################################
+            
             print("#############################################################")
             print("############# All sensor send data packet to CH #############")
             print("#############################################################")
@@ -556,15 +457,7 @@ class LEACHSimulation:
         # ####################################################################################################
         # ############# send Data packet directly from nodes(that aren't in any cluster) to Sink #############
         # ####################################################################################################
-        print(
-            "####################################################################################################"
-        )
-        print(
-            "############# send Data packet directly from nodes(that aren't in any cluster) to Sink #############"
-        )
-        print(
-            "####################################################################################################"
-        )
+        
 
         for sender in self.Sensors:
             # if the node has sink as its CH but it's not sink itself and the node is not dead
@@ -588,18 +481,7 @@ class LEACHSimulation:
         # ###################################################################################
         # ############# Send Data packet from CH to Sink after Data aggregation #############
         # ###################################################################################
-        print(
-            "###################################################################################"
-        )
-        print(
-            "############# Send Data packet from CH to Sink after Data aggregation #############"
-        )
-        print(
-            "###################################################################################"
-        )
-        print()
-
-        # todo: test
+        
         print("senders (or CH) = ", self.list_CH)
 
         for sender in self.list_CH:
@@ -675,8 +557,7 @@ class LEACHSimulation:
         else:
             self.Enheraf[round_number] = 0
 
-        # todo: maybe this is related to graph?
-        # title(sprintf('Round=##d,Dead nodes=##d', round_number, deadNum))
+        
 
         # todo: test
         print("round number:", round_number)
@@ -697,10 +578,7 @@ class LEACHSimulation:
         print("self.consumed_energy", self.consumed_energy)
         print("self.Enheraf", self.Enheraf)
 
-        print(
-            "Sensors: ",
-        )
-        var_pp(self.Sensors)
+        
         print("----------------------------------------------")
 
     def perform_clustering(self, k):
@@ -770,3 +648,14 @@ class LEACHSimulation:
             + (1 - self.my_model.ff_alpha) * node.E
         )  # Final Fitness Func FF
         return fitness
+
+    def perform_cluster_id_new_ch(self,cluster_id,CH):
+        cluster_nodes = [node for node in self.Sensors if node.cluster_id == cluster_id]
+        fitness_scores = [self.calculate_fitness(node) for node in cluster_nodes]
+        cluster_head = cluster_nodes[fitness_scores.index(min(fitness_scores))]     
+
+        cluster_head.type = "C"
+        CH.append(cluster_head)
+        
+        
+        

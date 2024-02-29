@@ -27,13 +27,13 @@ def start(sensors: list[Sensor], my_model: Model, senders: list, receivers: list
     # Each sender will send to each receiver
     for sender in senders:
         for receiver in receivers:
-            print("########sender is ", sender.id, "and rec is ", receiver)
+            print("########sender is ", sender.id, "and rec is ", receiver.id)
             print()
             distance = sqrt(
-                pow(sensors[sender.id].xd - sensors[receiver].xd, 2) +
-                pow(sensors[sender.id].yd - sensors[receiver].yd, 2)
+                pow(sensors[sender.id].xd - sensors[receiver.id].xd, 2) +
+                pow(sensors[sender.id].yd - sensors[receiver.id].yd, 2)
             )
-            print(f"dist b/w sender: {sender.id} and receiver: {receiver} is: {distance}")
+            print(f"dist b/w sender: {sender.id} and receiver: {receiver.id} is: {distance}")
 
             if distance > my_model.do:
                 sensors[sender.id].E -= my_model.ETX * PacketSize + my_model.Emp * PacketSize * pow(distance, 4)
@@ -44,19 +44,19 @@ def start(sensors: list[Sensor], my_model: Model, senders: list, receivers: list
                 sent_packets = send_rec(sensors, sender.id, sent_packets)
 
     for receiver in receivers:
-        sensors[receiver].E -= (my_model.ERX + my_model.EDA) * PacketSize
+        sensors[receiver.id].E -= (my_model.ERX + my_model.EDA) * PacketSize
 
     # for receivers
     # Energy dissipated from receivers for Receiving a packet, if the sender died during transmission,
     # the energy of receiver will be wasted but it will not receive any packet
     for sender in senders:
         for receiver in receivers:
-            if sensors[receiver].E > 0 and sensors[sender.id].E > 0:
+            if sensors[receiver.id].E > 0 and sensors[sender.id].E > 0:
                 # Received a Packet
                 rec_packets += 1
-                print(f'{receiver} received a packet, new energy of {receiver} = {sensors[receiver].E}')
-            elif sensors[receiver].E < 0:
-                sensors[receiver].df = 1
+                print(f'{receiver.id} received a packet, new energy of {receiver.id} = {sensors[receiver.id].E}')
+            elif sensors[receiver.id].E < 0:
+                sensors[receiver.id].df = 1
 
     if packet_type == 'Hello':
         srp += sent_packets

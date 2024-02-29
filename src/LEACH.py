@@ -123,9 +123,9 @@ class LEACHSimulation:
         self.__create_sen()
         
         # self.__print_sensors()
-        # self.__start_simulation()
+        self.__start_simulation()
         self.__main_loop()
-        # self.__plot_sensors()s
+        
         # Todo: all plotting should be done in Leach_plotter file
         # plt.xlim(left=0, right=self.my_model.rmax)
         # plt.ylim(bottom=0, top=self.n)
@@ -298,10 +298,10 @@ class LEACHSimulation:
         print()
 
         self.sender = [
-            self.n
+            self.Sensors[self.n]
         ]  # List of senders, for start_sim, sink will send hello packet to all
         self.receivers = [
-            _ for _ in range(self.n)
+            self.Sensors[i] for i in range(self.n)
         ]  # List of senders, for start_sim, All nodes will receive from sink
 
         # todo: test
@@ -369,10 +369,10 @@ class LEACHSimulation:
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
-            # self.__steady_state_phase()
+            self.__steady_state_phase()
 
             # if sensor is dead
-            # self.__check_dead_num(round_number)
+            self.__check_dead_num(round_number)
 
             # self.__statistics(round_number)
 
@@ -422,7 +422,7 @@ class LEACHSimulation:
         # #########################################################################################
         # ############# Broadcasting CHs to All Sensors that are in Radio Range of CH #############
         # #########################################################################################
-        self.__broadcast_cluster_head()
+        # self.__broadcast_cluster_head()
 
         # ######################################################
         # ############# Sensors join to nearest CH #############
@@ -569,8 +569,8 @@ class LEACHSimulation:
         for sender in self.Sensors:
             # if the node has sink as its CH but it's not sink itself and the node is not dead
             if sender.cluster_id == self.n and sender.id != self.n and sender.E > 0:
-                self.receivers = [self.n]  # Sink
-                sender = [sender.id]
+                self.receivers = [self.Sensors[self.n]]  # Sink
+                sender = [sender]
 
                 print(f"node {sender} will send directly to sink ")
                 self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
@@ -603,7 +603,7 @@ class LEACHSimulation:
         print("senders (or CH) = ", self.list_CH)
 
         for sender in self.list_CH:
-            self.receivers = [self.n]  # Sink
+            self.receivers = [self.Sensors[self.n]]  # Sink
 
             # todo: test
             print("sender: ", sender)

@@ -77,7 +77,8 @@ class Model:
         self.ff_alpha = 0.5
         
         #Clusters
-        self.num_clusters = 16
+        self.num_clusters = 20
+        self.clusters_per_layer = int(self.num_clusters / self.num_layers)
 
         # self.numRx = int(sqrt(self.p * self.n))
         # self.dr = x / self.numRx

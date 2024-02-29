@@ -1,9 +1,15 @@
 import pprint
 from math import *
 import matplotlib
-
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import random
+import math
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from sklearn.cluster import KMeans
+from yellowbrick.cluster import KElbowVisualizer
 
 from src import LEACH_create_basics
 from src import LEACH_select_ch
@@ -62,7 +68,7 @@ class LEACHSimulation:
         self.SDP = zeros(1, self.my_model.rmax + 1)  # number of sent data packets
         self.RDP = zeros(1, self.my_model.rmax + 1)  # number of receive data packets
 
-       
+        self.layer_heights = [0, -80, -170, -270, -380, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
         self.srp = 0  # counter number of sent routing packets
         self.rrp = 0  # counter number of receive routing packets
@@ -75,7 +81,7 @@ class LEACHSimulation:
         self.dead_num = []
         self.packets_to_base_station = 0
         self.first_dead_in = -1
-
+        self.list_CH = []
         # This section Operate for each epoch
         # self.member = []  # Member of each cluster in per period      # Not used
 
@@ -113,47 +119,30 @@ class LEACHSimulation:
         print("#################################")
         print()
 
-        # ##########################################
-        # ############# Create Sensors #############
-        # ##########################################
-        self.__create_sen()
-
-        # ########################################
-        # ############# plot Sensors #############
-        # ########################################
-        # todo: Plot sensors Here
-
-        # ############################################
-        # ############# Start Simulation #############
-        # ############################################
-        self.__start_simulation()
-
-        # #############################################
-        # ############# Main loop program #############
-        # #############################################
-        self.__main_loop()
+        self.__create_sen()        
+        self.__plot_sensors()
+        self.__print_sensors()        
+        # self.__start_simulation()
+        # self.__main_loop()
 
         # Todo: all plotting should be done in Leach_plotter file
-        plt.xlim(left=0, right=self.my_model.rmax)
-        plt.ylim(bottom=0, top=self.n)
-        plt.plot(self.alive_sensors)
-        plt.title("Life time of sensor nodes")
-        plt.xlabel('Rounds')
-        plt.ylabel('No. of live nodes')
-        # plt.ioff()
-        plt.show()
+        # plt.xlim(left=0, right=self.my_model.rmax)
+        # plt.ylim(bottom=0, top=self.n)
+        # plt.plot(self.alive_sensors)
+        # plt.title("Life time of sensor nodes")
+        # plt.xlabel('Rounds')
+        # plt.ylabel('No. of live nodes')
+        # # plt.ioff()
+        # plt.show()
         
-        plt.xlim(left=0, right=self.my_model.rmax)
-        plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
-        plt.plot(self.sum_energy_left_all_nodes)
-        plt.title("Total residual energy ")
-        plt.xlabel('Rounds')
-        plt.ylabel('Energy (J)')
-        plt.show()
+        # plt.xlim(left=0, right=self.my_model.rmax)
+        # plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
+        # plt.plot(self.sum_energy_left_all_nodes)
+        # plt.title("Total residual energy ")
+        # plt.xlabel('Rounds')
+        # plt.ylabel('Energy (J)')
+        # plt.show()
 
-        # ##############################################
-        # ############# END of simulation ##############
-        # ##############################################
         print('-------------------- XXX --------------------')
         print('############# END of simulation #############')
         print('-------------------- XXX --------------------')
@@ -200,15 +189,59 @@ class LEACHSimulation:
         print("self.initEnergy", self.initEnergy)
         print('----------------------------------------------')
 
+    def __plot_sensors(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        x_vals = [node.xd for node in self.Sensors]
+        y_vals = [node.yd for node in self.Sensors]
+        z_vals = [node.zd for node in self.Sensors]
+
+        sink_x_vals = [x_vals[-1]]
+        sink_y_vals = [y_vals[-1]]
+        sink_z_vals = [z_vals[-1]]
+        
+        x_vals=x_vals[:-1]
+        y_vals=y_vals[:-1]
+        z_vals=z_vals[:-1]
+        
+        ax.scatter(x_vals, y_vals, z_vals, c='b', marker='o', label='Nodes')
+
+        # Plot blue planes at specified heights
+        for height in self.layer_heights:
+            x_plane = np.linspace(min(x_vals), max(x_vals), 100)
+            y_plane = np.linspace(min(y_vals), max(y_vals), 100)
+            x_plane, y_plane = np.meshgrid(x_plane, y_plane)
+            z_plane = np.full_like(x_plane, height)
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.3, color='blue')
+
+        
+        ax.scatter(sink_x_vals, sink_y_vals, sink_z_vals, c='red', marker='^', label='Sink Nodes')
+
+        ax.set_xlabel('X-axis')
+        ax.set_ylabel('Y-axis')
+        ax.set_zlabel('Z-axis')
+        ax.set_title('3D UWSN')
+
+        plt.legend()
+        plt.show()
+        
+    def __print_sensors(self):
+        print("##########################################")
+        print("############# Print Sensors #############")
+        print("##########################################")
+        print()
+        for sensor in self.Sensors:
+            print(sensor.id,sensor.xd,sensor.yd,sensor.zd,sensor.layer_num)
+        print('----------------------------------------------')
+        
     def __start_simulation(self):
         print("############################################")
         print("############# Start Simulation #############")
         print("############################################")
         print()
 
-        # #######################################################################
-        # ############# Sink broadcast 'Hello' message to all nodes #############
-        # #######################################################################
+        
         print("#######################################################################")
         print("############# Sink broadcast 'Hello' message to all nodes #############")
         print("#######################################################################")
@@ -260,13 +293,7 @@ class LEACHSimulation:
             print(f'############# Round {round_number} #############')
             print('#####################################')
 
-            # ##########################################
-            # ############# Initialization #############
-            # ##########################################
-            print('####################################################')
-            print('############# Main loop Initialization #############')
-            print('####################################################')
-            print()
+           
 
             self.srp, self.rrp, self.sdp, self.rdp = reset_sensors.start(self.Sensors, self.my_model, round_number)
 
@@ -274,32 +301,18 @@ class LEACHSimulation:
             print("Sensors: ", )
             var_pp(self.Sensors)
 
-            # ########################################
-            # ############# plot Sensors #############
-            # ########################################
-
-            # #################################################
             # ############# cluster head election #############
-            # #################################################
+            
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
-            # ######################################################################
-            # ############# Plot network status in end of set-up phase #############
-            # ######################################################################
-            # Todo: Plot
-
-            # ##############################################
-            # ############# steady-state phase #############
-            # ##############################################
+           
             self.__steady_state_phase()
 
             # if sensor is dead
             self.__check_dead_num(round_number)
 
-            # ######################################
-            # ############# STATISTICS #############
-            # ######################################
+            
             self.__statistics(round_number)
 
             # if all nodes are dead or only sink is left, exit
@@ -313,10 +326,29 @@ class LEACHSimulation:
         print('############# cluster head election #############')
         print('#################################################')
         print()
-
+        print("Clusters of Current Round:", self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
         # self.list_CH stores the id of all CH in current round
-        self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number)
+        
+        self.list_CH = perform_clustering(self.my_model.clusters_per_layer)
+        # if(round_number == 1):
+        #     self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number)
+        # else:
+        # # Check if energy of each existing cluster head is below threshold
+        #     clusters_to_re_elect = []
+        #     for cluster_head_id in self.list_CH:
+        #         cluster_head = next((node for node in self.Sensors if node.node_id == cluster_head_id), None)
+        #         if cluster_head and cluster_head.energy < 0.5:  # Adjust ENERGY_THRESHOLD as needed
+        #             clusters_to_re_elect.append(cluster_head.cluster_id)
+
+        #     # Re-elect cluster heads only for clusters with energy below threshold
+        #     if clusters_to_re_elect:
+        #         self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number, clusters_to_re_elect)
+        #         self.no_of_ch = len(self.list_CH)
+        # #add checker if CH has energy below threshold 
+        # #store cluster ids of all such clusters
+        # #only re elect chs of those clusters
+        # self.list_CH = LEACH_select_ch.start(self.Sensors, self.my_model, round_number)
         self.no_of_ch = len(self.list_CH)
 
         # todo: test
@@ -546,3 +578,56 @@ class LEACHSimulation:
         print("Sensors: ", )
         var_pp(self.Sensors)
         print('----------------------------------------------')
+
+
+    def perform_clustering(self, k):
+            total_depth = abs(self.z_range[0] - self.z_range[1])
+
+            # Iterate through layers
+            for layer in set(node.layer_number for node in self.nodes):
+                layer_nodes = [node for node in self.nodes if node.layer_number == layer]
+
+                if not layer_nodes:
+                    continue  # Skip layers with no nodes
+
+                # Combine node coordinates into a single array for clustering
+                node_coordinates = [[node.x, node.y, node.z] for node in layer_nodes]
+
+                # Use KMeans clustering with explicit n_init
+                kmeans = KMeans(n_clusters=k, n_init=10, random_state=0)  # Set n_init explicitly
+                kmeans.fit(node_coordinates)
+
+                # Assign each node to its respective cluster
+                for i, node in enumerate(layer_nodes):
+                    node.cluster_id = kmeans.labels_[i]
+
+                # Store the cluster centers
+                self.cluster_centers.extend(kmeans.cluster_centers_)
+
+                # Select cluster heads based on a fitness function
+                cluster_id_head = 1
+                self.select_cluster_heads(layer_nodes,cluster_id_head)
+
+    def select_cluster_heads(self, layer_nodes,cluster_id_head):
+            
+            for cluster in set(node.cluster_id for node in layer_nodes):
+                cluster_nodes = [node for node in layer_nodes if node.cluster_id == cluster]
+                fitness_scores = [self.calculate_fitness(node) for node in cluster_nodes]
+                cluster_head = cluster_nodes[fitness_scores.index(min(fitness_scores))]
+                self.clusters.append(cluster_nodes)
+                cluster_head.is_CH = True
+                cluster_head.cluster_id = cluster_id_head            
+                self.cluster_heads.append(ClusterHead(cluster_head.node_id, cluster_head.x, cluster_head.y, cluster_head.z, cluster_head.layer_number,cluster_head.current_energy,cluster_id_head))
+                cluster_id_head+=1
+
+    def calculate_fitness(self, node):
+            # Assuming k-means clustering has been performed
+            # Calculate the distance from the node to its cluster center
+            cluster_center = self.cluster_centers[node.cluster_id]
+            distance_to_cluster_center = math.sqrt((node.x - cluster_center[0])**2 +
+                                                (node.y - cluster_center[1])**2 +
+                                                (node.z - cluster_center[2])**2)
+
+            d_div = abs(node.z / total_depth)
+            fitness = ff_alpha*distance_to_cluster_center + (1 - ff_alpha)*node.current_energy  #Final Fitness Func FF
+            return fitness

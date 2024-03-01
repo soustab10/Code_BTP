@@ -22,24 +22,6 @@ from src import send_receive_packets
 from src import LEACH_plotter
 
 
-def var_pp(stuff):
-    pass
-    # Todo: UNCOMMENT
-    # prettty_prrint = pprint.PrettyPrinter(indent=1)
-    # for x in stuff:
-    #     prettty_prrint.pprint(vars(x))
-
-
-def pp(stuff):
-    print(stuff)
-    # Todo: UNCOMMENT
-    # prettty_prrint = pprint.PrettyPrinter(indent=4)
-    # prettty_prrint.pprint(stuff)
-
-
-# #################################################
-
-
 def zeros(row, column):
     re_list = []
     for x in range(row):
@@ -123,27 +105,14 @@ class LEACHSimulation:
         self.__create_sen()
         
         self.__print_sensors()
-        # self.__plot_sensors()
+        self.__plot_clusters()
         self.__start_simulation()
         self.__main_loop()
-        # self.__statistics()
+        self.__statistics()
         # Todo: all plotting should be done in Leach_plotter file
-        plt.xlim(left=0, right=self.my_model.rmax)
-        plt.ylim(bottom=0, top=self.n)
-        plt.plot(self.alive_sensors)
-        plt.title("Life time of sensor nodes")
-        plt.xlabel('Rounds')
-        plt.ylabel('No. of live nodes')
-        # plt.ioff()
-        plt.show()
-
-        plt.xlim(left=0, right=self.my_model.rmax)
-        plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
-        plt.plot(self.sum_energy_left_all_nodes)
-        plt.title("Total residual energy ")
-        plt.xlabel('Rounds')
-        plt.ylabel('Energy (J)')
-        plt.show()
+        
+        LEACH_plotter.start(self)
+        
 
         print("-------------------- XXX --------------------")
         print("############# END of simulation #############")
@@ -187,7 +156,7 @@ class LEACHSimulation:
         self.avg_energy_All_sensor[0] = self.initEnergy / self.n
 
         # todo: test
-        var_pp(self.Sensors)
+        print(self.Sensors)
         print("self.initEnergy", self.initEnergy)
         print("----------------------------------------------")
 
@@ -256,7 +225,7 @@ class LEACHSimulation:
         print("Cluster centers:", self.cluster_centers)
         print("----------------------------------------------")
         
-    def plot_clusters(self, layer_number=None):
+    def __plot_clusters(self, layer_number=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
@@ -308,9 +277,9 @@ class LEACHSimulation:
 
         # todo: test
         print("Senders: ", end="")
-        pp(self.sender)
+        print(self.sender)
         print("Receivers: ", end="")
-        pp(self.receivers)
+        print(self.receivers)
         print()
 
         self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
@@ -330,7 +299,7 @@ class LEACHSimulation:
         print("self.rrp", self.rrp)
         print("self.sdp", self.sdp)
         print("self.rdp", self.rdp)
-        print("Sensors: \n", var_pp(self.Sensors))
+        print("Sensors: \n", print(self.Sensors))
 
         # Save metrics, Round 0 is initialization phase where all nodes send routing packets (hello) to Sink as above
         self.SRP[0] = self.srp
@@ -364,7 +333,7 @@ class LEACHSimulation:
             print(
                 "Sensors: ",
             )
-            var_pp(self.Sensors)
+            print(self.Sensors)
 
             # ############# cluster head election #############
             
@@ -408,7 +377,7 @@ class LEACHSimulation:
             
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
         self.__print_sensors()
-        self.plot_clusters()        
+        # self.plot_clusters()        
 
     
     def __steady_state_phase(self):
@@ -453,7 +422,7 @@ class LEACHSimulation:
                 print(
                     "Sensors: ",
                 )
-                var_pp(self.Sensors)
+                print(self.Sensors)
                 print()
 
         # ####################################################################################################
@@ -513,7 +482,7 @@ class LEACHSimulation:
             print(
                 "Sensors: ",
             )
-            var_pp(self.Sensors)
+            print(self.Sensors)
             print()
 
     def __statistics(self, round_number):

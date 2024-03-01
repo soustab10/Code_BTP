@@ -122,27 +122,28 @@ class LEACHSimulation:
 
         self.__create_sen()
         
-        # self.__print_sensors()
+        self.__print_sensors()
+        # self.__plot_sensors()
         self.__start_simulation()
         self.__main_loop()
-        
+        # self.__statistics()
         # Todo: all plotting should be done in Leach_plotter file
-        # plt.xlim(left=0, right=self.my_model.rmax)
-        # plt.ylim(bottom=0, top=self.n)
-        # plt.plot(self.alive_sensors)
-        # plt.title("Life time of sensor nodes")
-        # plt.xlabel('Rounds')
-        # plt.ylabel('No. of live nodes')
-        # # plt.ioff()
-        # plt.show()
+        plt.xlim(left=0, right=self.my_model.rmax)
+        plt.ylim(bottom=0, top=self.n)
+        plt.plot(self.alive_sensors)
+        plt.title("Life time of sensor nodes")
+        plt.xlabel('Rounds')
+        plt.ylabel('No. of live nodes')
+        # plt.ioff()
+        plt.show()
 
-        # plt.xlim(left=0, right=self.my_model.rmax)
-        # plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
-        # plt.plot(self.sum_energy_left_all_nodes)
-        # plt.title("Total residual energy ")
-        # plt.xlabel('Rounds')
-        # plt.ylabel('Energy (J)')
-        # plt.show()
+        plt.xlim(left=0, right=self.my_model.rmax)
+        plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
+        plt.plot(self.sum_energy_left_all_nodes)
+        plt.title("Total residual energy ")
+        plt.xlabel('Rounds')
+        plt.ylabel('Energy (J)')
+        plt.show()
 
         print("-------------------- XXX --------------------")
         print("############# END of simulation #############")
@@ -252,6 +253,7 @@ class LEACHSimulation:
             
         print("Total Number of CHs:", ct)
         print("Total Number of Clusters:", len(num_clusters))
+        print("Cluster centers:", self.cluster_centers)
         print("----------------------------------------------")
         
     def plot_clusters(self, layer_number=None):
@@ -371,10 +373,10 @@ class LEACHSimulation:
 
             self.__steady_state_phase()
 
-            # if sensor is dead
+            # # if sensor is dead
             self.__check_dead_num(round_number)
 
-            # self.__statistics(round_number)
+            self.__statistics(round_number)
 
             # if all nodes are dead or only sink is left, exit
             if len(self.dead_num) >= self.n:
@@ -387,26 +389,26 @@ class LEACHSimulation:
         print("############# cluster head election #############")
         print("#################################################")
         print()
-        print("Clusters of Current Round:", self.list_CH)
+        print("Clusters of Current Round:",self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
-        print(self.list_CH)
+        
         if(round_number == 1):
-            self.list_CH = self.perform_clustering(self.my_model.clusters_per_layer)
+            self.perform_clustering(self.my_model.clusters_per_layer)
         else:
             cluster_ids_newch = []
             for cluster_head in self.list_CH:
-                if(cluster_head.E <= self.my_model.E_threshold):
+                if(cluster_head.E <= self.my_model.E_threshold and cluster_head.type != 'S'):
                     cluster_head.type = 'N'                    
                     cluster_ids_newch.append(cluster_head.cluster_id)
             
             self.list_CH = [ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch]
             
             for c_id in cluster_ids_newch:
-                self.perform_cluster_id_new_ch(c_id,self.list_CH)
+                self.perform_cluster_id_new_ch(c_id)
             
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
-        # self.__print_sensors()
-        # self.plot_clusters()        
+        self.__print_sensors()
+        self.plot_clusters()        
 
     
     def __steady_state_phase(self):
@@ -583,7 +585,7 @@ class LEACHSimulation:
 
     def perform_clustering(self, k):
         total_depth = abs(self.my_model.z_range[0] - self.my_model.z_range[1])
-        CH = []
+        
         
         # Iterate through layers
         for layer in set(node.layer_number for node in self.Sensors):
@@ -611,51 +613,53 @@ class LEACHSimulation:
 
             # Select cluster heads based on a fitness function
             
-            self.select_cluster_heads(layer_nodes, layer, CH)
+            self.select_cluster_heads(layer_nodes, layer)
 
         
         
-        return CH
 
-    def select_cluster_heads(self, layer_nodes, layer, CH):
+    def select_cluster_heads(self, layer_nodes, layer):
         
         cl_id = 0
         for cluster in set(node.cluster_id for node in layer_nodes):
             cluster_nodes = [node for node in layer_nodes if node.cluster_id == cluster]
-            fitness_scores = [self.calculate_fitness(node) for node in cluster_nodes]
+            
+            new_cluster_id= (layer-1)*self.my_model.clusters_per_layer+cl_id
+            fitness_scores = [self.calculate_fitness(node,new_cluster_id,cluster_nodes) for node in cluster_nodes]
             cluster_head = cluster_nodes[fitness_scores.index(min(fitness_scores))]
             for cluster_node in cluster_nodes:
-                cluster_node.cluster_id = layer*self.my_model.clusters_per_layer+cl_id
+                cluster_node.cluster_id = new_cluster_id
 
             cluster_head.type = "C"
-            cluster_head.cluster_id = layer*self.my_model.clusters_per_layer+cl_id
-            CH.append(cluster_head)
+            cluster_head.cluster_id = new_cluster_id
+            self.list_CH.append(cluster_head)
             cl_id+=1
             
 
-    def calculate_fitness(self, node):
+    def calculate_fitness(self, node,ch_id,cluster_nodes):
         # Assuming k-means clustering has been performed
         # Calculate the distance from the node to its cluster center
-        cluster_center = self.cluster_centers[node.cluster_id]
-        distance_to_cluster_center = math.sqrt(
-            (node.xd - cluster_center[0]) ** 2
-            + (node.yd - cluster_center[1]) ** 2
-            + (node.zd - cluster_center[2]) ** 2
-        )
+        print("Node:clusterId:",node.cluster_id)
+        
+        fitness = 0
+        for cluster_node in cluster_nodes:
+            distance_to_cluster_center = math.sqrt((node.xd - cluster_node.xd) ** 2+ ( node.yd - cluster_node.yd) ** 2+ (node.zd - cluster_node.zd) ** 2 )
 
-        fitness = (
-            self.my_model.ff_alpha * distance_to_cluster_center
-            + (1 - self.my_model.ff_alpha) * node.E
-        )  # Final Fitness Func FF
+            fitness = (
+                self.my_model.ff_alpha * distance_to_cluster_center
+                + (1 - self.my_model.ff_alpha) * node.E
+            )  # Final Fitness Func FF
+            
+        
         return fitness
 
-    def perform_cluster_id_new_ch(self,cluster_id,CH):
+    def perform_cluster_id_new_ch(self,cluster_id):
         cluster_nodes = [node for node in self.Sensors if node.cluster_id == cluster_id]
-        fitness_scores = [self.calculate_fitness(node) for node in cluster_nodes]
+        fitness_scores = [self.calculate_fitness(node,cluster_id,cluster_nodes) for node in cluster_nodes]
         cluster_head = cluster_nodes[fitness_scores.index(min(fitness_scores))]     
-
-        cluster_head.type = "C"
-        CH.append(cluster_head)
+        print("ok")
+        cluster_head.type = 'C'
+        self.list_CH.append(cluster_head)
         
         
         

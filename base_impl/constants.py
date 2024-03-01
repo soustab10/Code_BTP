@@ -59,7 +59,7 @@ layer_heights = [0,-80,-170,-270,-380,-500]
 L = y_range[1]
 M = (3**0.5) * L
 # num_clusters = (M*M*num_bits*efs/(10*L*L))**0.60
-num_clusters = 18*5
+num_clusters = 4*5
 cluster_size = tx_range
 cluster_per_layer = (num_clusters/num_layers)
 

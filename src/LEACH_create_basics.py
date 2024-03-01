@@ -31,7 +31,7 @@ class Model:
         # self.num_clusters = 
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 0.5
+        self.Eo: float = 1
         self.E_threshold = 0.4*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
@@ -46,21 +46,21 @@ class Model:
         self.EDA: float = 5 * 0.000000001
 
         # Computation of do
-        self.do: float = sqrt(self.Efs / self.Emp) * sqrt(self.n/(2*3.1415926535))
+        self.do: float = sqrt(self.Efs / self.Emp) 
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 1
+        self.rmax = 25
 
         # Data packet size
-        self.data_packet_len = 200
+        self.data_packet_len = 5000
 
         # Hello packet size
-        self.hello_packet_len = 50
+        self.hello_packet_len = 4
 
         # todo : change this to 10
         # Number of Packets sent in steady-state phase
-        self.NumPacket = 10
+        self.NumPacket = 1
 
         # Radio Range
         self.RR: float = self.tx_range

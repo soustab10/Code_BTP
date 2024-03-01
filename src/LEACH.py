@@ -105,15 +105,15 @@ class LEACHSimulation:
         self.__create_sen()
         
         self.__print_sensors()
-        self.__plot_clusters()
+        # self.__plot_clusters()
         self.__start_simulation()
         self.__main_loop()
-        self.__statistics()
+        self.__statistics(round_number=self.my_model.rmax)
         # Todo: all plotting should be done in Leach_plotter file
         
         LEACH_plotter.start(self)
         
-
+        print(self.list_CH)
         print("-------------------- XXX --------------------")
         print("############# END of simulation #############")
         print("-------------------- XXX --------------------")
@@ -136,7 +136,7 @@ class LEACHSimulation:
             self.first_dead_in = round_number
             self.flag_first_dead = 1
 
-            print(f"first dead in round: {round_number}")
+            print(f"First dead in round: {round_number}")
 
     def __create_sen(self):
         print("##########################################")
@@ -340,7 +340,7 @@ class LEACHSimulation:
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
-            self.__steady_state_phase()
+            self.__steady_state_phase_2()
 
             # # if sensor is dead
             self.__check_dead_num(round_number)
@@ -350,7 +350,7 @@ class LEACHSimulation:
             # if all nodes are dead or only sink is left, exit
             if len(self.dead_num) >= self.n:
                 self.lastPeriod = round_number
-                print(f"all dead (dead={len(self.dead_num)}) in round {round_number}")
+                print(f"All nodes are dead. (dead={len(self.dead_num)}) in round {round_number}")
                 break
 
     def __cluster_head_selection_phase(self, round_number):
@@ -379,7 +379,75 @@ class LEACHSimulation:
         self.__print_sensors()
         # self.plot_clusters()        
 
-    
+    def __steady_state_phase_2(self):
+        print("##############################################")
+        print("############# steady state phase #############")
+        print("##############################################")
+        print()
+        
+        
+        #for each sensor -> send data to its CH ->  CH send data to upper layer/hop count -> If CH_hop count = 1 send data to sink
+          
+        for sensor in self.Sensors:
+            sender = None
+            receiver = None
+            if sensor.type == 'N':
+                receiver = [node for node in self.Sensors if node.cluster_id == sensor.cluster_id and node.type == 'C'][0]
+                sender = sensor
+                self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
+                    self.Sensors,
+                    self.my_model,
+                    [sender],
+                    [receiver],
+                    self.srp,
+                    self.rrp,
+                    self.sdp,
+                    self.rdp,
+                    packet_type="Data",
+                )
+
+                is_sent_to_sink = False
+                sender = receiver
+                while(is_sent_to_sink != True):
+                                        
+                    nearest_receiver = self.find_valid_receiver(sender)
+                            
+                            
+                    print("Nearest receiver:",nearest_receiver)
+                    if(nearest_receiver.hop_count == 1):
+                        is_sent_to_sink = True
+                        self.receivers = [self.Sensors[self.n]]  # Sink
+                        sender = [sender]
+
+                        print(f"node {sender} will send directly to sink ")
+                        self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
+                            self.Sensors,
+                            self.my_model,
+                            sender,
+                            self.receivers,
+                            self.srp,
+                            self.rrp,
+                            self.sdp,
+                            self.rdp,
+                            packet_type="Data")
+                    else:
+                        self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
+                            self.Sensors,
+                            self.my_model,
+                            [sender],
+                            [nearest_receiver],
+                            self.srp,
+                            self.rrp,
+                            self.sdp,
+                            self.rdp,
+                            packet_type="Data",
+                        )
+                        
+                    sender = nearest_receiver
+                        
+                    
+
+        
     def __steady_state_phase(self):
         print("##############################################")
         print("############# steady state phase #############")
@@ -631,4 +699,16 @@ class LEACHSimulation:
         self.list_CH.append(cluster_head)
         
         
-        
+    def find_valid_receiver(self, sender):
+        receivers = [node for node in self.Sensors if node.hop_count <= sender.hop_count and node.type == 'C' and node.id != sender.id]
+
+        # Calculate distances between the sender and each receiver
+        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+
+        # Find the index of the nearest receiver
+        if distances:
+            nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+        return None  # No valid receivers found

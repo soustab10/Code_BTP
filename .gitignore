@@ -140,6 +140,3 @@ cython_debug/
 #pycharm
 .idea/
 
-# LEACH
-*~lock*
-out.txt

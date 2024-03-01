@@ -50,7 +50,7 @@ class Model:
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 25
+        self.rmax = 1
 
         # Data packet size
         self.data_packet_len = 5000
@@ -130,7 +130,7 @@ def create_sensors(my_model: Model):
     sensors[n].type = 'S'
     sensors[n].dis2sink = 0
     sensors[n].layer_number = 5
-
+    sensors[n].hop_count = 0
     for i, sensor in enumerate(sensors[:-1]):
                
         sensor.xd = random.uniform(my_model.x_range[0], my_model.x_range[1])

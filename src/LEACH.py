@@ -105,8 +105,10 @@ class LEACHSimulation:
         self.__create_sen()
         
         self.__print_sensors()
-        # self.__plot_clusters()
+        self.__plot_sensors()
         self.__start_simulation()
+        
+        # self.__plot_clusters()
         self.__main_loop()
         self.__statistics(round_number=self.my_model.rmax)
         # Todo: all plotting should be done in Leach_plotter file
@@ -148,7 +150,7 @@ class LEACHSimulation:
         # configure sensors
         self.Sensors = LEACH_create_basics.create_sensors(self.my_model)
 
-        for sensor in self.Sensors[:-1]:
+        for sensor in self.Sensors[:self.my_model.num_sinks]:
             self.initEnergy += sensor.E
 
         # We will have full energy in start
@@ -171,16 +173,17 @@ class LEACHSimulation:
         y_vals_ch = [node.yd for node in self.Sensors if node.type == 'C']
         z_vals_ch = [node.zd for node in self.Sensors if node.type == 'C']
 
-        sink_x_vals = [x_vals[-1]]
-        sink_y_vals = [y_vals[-1]]
-        sink_z_vals = [z_vals[-1]]
+        sink_x_vals = [sensor.xd for sensor in self.Sensors[-self.my_model.num_sinks:]]
+        sink_y_vals = [sensor.yd for sensor in self.Sensors[-self.my_model.num_sinks:]]
+        sink_z_vals = [sensor.zd for sensor in self.Sensors[-self.my_model.num_sinks:]]
 
-        x_vals = x_vals[:-1]
-        y_vals = y_vals[:-1]
-        z_vals = z_vals[:-1]
+
+        x_vals = x_vals[:-self.my_model.num_sinks]
+        y_vals = y_vals[:-self.my_model.num_sinks]
+        z_vals = z_vals[:-self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
 
         # Plot blue planes at specified heights
         for height in self.layer_heights:
@@ -254,7 +257,7 @@ class LEACHSimulation:
         ax.set_ylabel('Y-axis')
         ax.set_zlabel('Z-axis')
         ax.set_title('3D Sensor Network by Cluster with Cluster Heads')
-        plt.legend()
+        # plt.legend()
         plt.show()
 
     def __start_simulation(self):
@@ -268,9 +271,8 @@ class LEACHSimulation:
         print("#######################################################################")
         print()
 
-        self.sender = [
-            self.Sensors[self.n]
-        ]  # List of senders, for start_sim, sink will send hello packet to all
+        self.sender = self.Sensors[-self.my_model.num_sinks:]
+ # List of senders, for start_sim, sink will send hello packet to all
         self.receivers = [
             self.Sensors[i] for i in range(self.n)
         ]  # List of senders, for start_sim, All nodes will receive from sink
@@ -377,7 +379,7 @@ class LEACHSimulation:
             
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
         self.__print_sensors()
-        # self.plot_clusters()        
+        # self.__plot_clusters()        
 
     def __steady_state_phase_2(self):
         print("##############################################")
@@ -410,14 +412,30 @@ class LEACHSimulation:
                 sender = receiver
                 while(is_sent_to_sink != True):
                                         
-                    nearest_receiver = self.find_valid_receiver(sender)
+                    nearest_receiver = self.find_valid_receiver_2(sender)
                             
                             
                     print("Nearest receiver:",nearest_receiver)
                     if(nearest_receiver.hop_count == 1):
                         is_sent_to_sink = True
                         self.receivers = [self.Sensors[self.n]]  # Sink
+                        
+                        
+                        # Assuming you have a reference point (x_ref, y_ref, z_ref)
+                        x_ref, y_ref, z_ref = sender.xd, sender.yd, sender.zd  # Sender coordinates
+
+                        # Calculate distances from the reference point to all sensors except the sender
+                        distances = [((sensor.xd - x_ref)**2 + (sensor.yd - y_ref)**2 + (sensor.zd - z_ref)**2)**0.5 for sensor in self.Sensors[self.n : self.n + self.my_model.num_sinks]]
+
+                        # Find the index of the sensor with the smallest distance (nearest receiver)
+                        nearest_receiver_index = distances.index(min(distances))
+
+                        # Assign the nearest receiver to self.receivers
+                        self.receivers = [self.Sensors[nearest_receiver_index]]
                         sender = [sender]
+
+                        
+
 
                         print(f"node {sender} will send directly to sink ")
                         self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
@@ -567,7 +585,7 @@ class LEACHSimulation:
 
         self.alive = 0
         sum_energy_left_all_nodes_in_curr_round = 0
-        for sensor in self.Sensors[:-1]:
+        for sensor in self.Sensors[:-self.my_model.num_sinks]:
             if sensor.E > 0:
                 self.alive += 1
                 sum_energy_left_all_nodes_in_curr_round += sensor.E
@@ -616,6 +634,26 @@ class LEACHSimulation:
         print("self.avg_energy_All_sensor", self.avg_energy_All_sensor)
         print("self.consumed_energy", self.consumed_energy)
         print("self.Enheraf", self.Enheraf)
+        
+        
+        filename = "sim_data.txt"
+
+        with open(filename, "a") as file:
+            file.write(f"Round number: {round_number}\n")
+            file.write(f"Length of SRP: {len(self.SRP)}\n")
+            file.write(f"SRP: {self.SRP}\n")
+            file.write(f"RRP: {self.RRP}\n")
+            file.write(f"SDP: {self.SDP}\n")
+            file.write(f"RDP: {self.RDP}\n")
+            file.write("----------------------------------------------\n")
+            file.write(f"Sum of dead nodes: {self.sum_dead_nodes}\n")
+            file.write(f"CH per round: {self.ch_per_round}\n")
+            file.write(f"Alive sensors: {self.alive_sensors}\n")
+            file.write(f"Sum energy left in all nodes: {self.sum_energy_left_all_nodes}\n")
+            file.write(f"Average energy of all sensors: {self.avg_energy_All_sensor}\n")
+            file.write(f"Consumed energy: {self.consumed_energy}\n")
+            file.write(f"Enheraf: {self.Enheraf}\n\n")
+
 
         
         print("----------------------------------------------")
@@ -674,8 +712,7 @@ class LEACHSimulation:
             
 
     def calculate_fitness(self, node,ch_id,cluster_nodes):
-        # Assuming k-means clustering has been performed
-        # Calculate the distance from the node to its cluster center
+        
         print("Node:clusterId:",node.cluster_id)
         
         fitness = 0
@@ -700,7 +737,18 @@ class LEACHSimulation:
         
         
     def find_valid_receiver(self, sender):
-        receivers = [node for node in self.Sensors if node.hop_count <= sender.hop_count and node.type == 'C' and node.id != sender.id]
+        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
+        
+        
+        #Implement Selction Function
+        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id]
 
         # Calculate distances between the sender and each receiver
         distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
@@ -710,5 +758,58 @@ class LEACHSimulation:
             nearest_receiver_index = distances.index(min(distances))
             nearest_receiver = receivers[nearest_receiver_index]
             return nearest_receiver
+        
+        
+        return None
+    
+    
+    def find_valid_receiver_2(self, sender):
+        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
+        
+        
+        #Implement Selction Function
+        optimal_receiver = None
+        min_value = float('inf')  # Initialize with infinity
+        alpha = 0.5
+        beta= 0.5
+        gamma = 0.0
+        base_distance = self.my_model.z * sqrt(3)
+        for receiver in receivers:
+            depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)
+            e_res = receiver.E / self.my_model.Eo
+            distance = ((sender.xd - receiver.xd) ** 2 + (sender.yd - receiver.yd) ** 2 + (sender.zd - receiver.zd) ** 2) ** 0.5
+            distance = distance / base_distance
 
-        return None  # No valid receivers found
+            # Calculate the value of the expression
+            value = alpha * e_res + beta * distance + gamma * depth_diff
+
+            # Update optimal receiver if the calculated value is lower
+            if value < min_value:
+                min_value = value
+                optimal_receiver = receiver
+
+        
+        if(optimal_receiver != None):
+            return optimal_receiver
+
+        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id]
+
+        min_value = float('inf')  # Initialize with infinity
+        
+        base_distance = self.my_model.z * sqrt(3)
+        for receiver in receivers:
+            depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)
+            e_res = receiver.E / self.my_model.Eo
+            distance = ((sender.xd - receiver.xd) ** 2 + (sender.yd - receiver.yd) ** 2 + (sender.zd - receiver.zd) ** 2) ** 0.5
+            distance = distance / base_distance
+
+            # Calculate the value of the expression
+            value = alpha * e_res + beta * distance + gamma * depth_diff
+
+            # Update optimal receiver if the calculated value is lower
+            if value < min_value:
+                min_value = value
+                optimal_receiver = receiver
+        
+        
+        return optimal_receiver

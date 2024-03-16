@@ -1,3 +1,4 @@
+import math
 import random
 from math import *
 
@@ -31,8 +32,8 @@ class Model:
         # self.num_clusters = 
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 1
-        self.E_threshold = 0.4*self.Eo
+        self.Eo: float = 0.05
+        self.E_threshold = 0.10*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
         self.ETX: float = 10* 10e-12
@@ -50,15 +51,14 @@ class Model:
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 1
+        self.rmax = 400
 
         # Data packet size
-        self.data_packet_len = 5000
+        self.data_packet_len = 200
 
         # Hello packet size
         self.hello_packet_len = 4
 
-        # todo : change this to 10
         # Number of Packets sent in steady-state phase
         self.NumPacket = 1
 
@@ -79,6 +79,9 @@ class Model:
         #Clusters
         self.num_clusters = 20
         self.clusters_per_layer = int(self.num_clusters / self.num_layers)
+        
+        
+        self.num_sinks = 9
 
         # self.numRx = int(sqrt(self.p * self.n))
         # self.dr = x / self.numRx
@@ -113,7 +116,7 @@ def create_sensors(my_model: Model):
 
     # Configuration sensors
     # created extra one slot for sink
-    sensors = [Sensor() for _ in range(n + 1)]
+    sensors = [Sensor() for _ in range(n + my_model.num_sinks)]
 
     # for sink
     """ 
@@ -122,15 +125,34 @@ def create_sensors(my_model: Model):
     so for n=10, 0-9 are 10 normal sensors and 10th slot is for sink 
     so Sensor[10] = 11th node = sink
     """
-    sensors[n].xd = my_model.sink_x
-    sensors[n].yd = my_model.sink_y
-    sensors[n].zd = my_model.sink_z
-    sensors[n].E = my_model.sinkE
-    sensors[n].id = my_model.n
-    sensors[n].type = 'S'
-    sensors[n].dis2sink = 0
-    sensors[n].layer_number = 5
-    sensors[n].hop_count = 0
+    
+    # x_sink = []
+    # y_sink = []
+    # unf_sink = int(math.sqrt(my_model.num_sinks))
+    # print("unf_sink", unf_sink)
+    # step_size = my_model.x / unf_sink
+    # for i in range(unf_sink):
+    #     for j in range(unf_sink):
+    #         x_sink.append((i + 1) * step_size)
+    #         y_sink.append((j + 1) * step_size)
+    
+    x_sink = [125, 250, 375, 125, 250, 375, 125, 250, 375]
+    y_sink = [125, 125, 125, 250, 250, 250, 375, 375, 375]
+
+            
+    
+    for i in range(0,my_model.num_sinks):        
+        sensors[n+i].xd = x_sink[i]
+        sensors[n+i].yd = y_sink[i]
+        sensors[n+i].zd = my_model.sink_z
+        sensors[n+i].E = my_model.sinkE
+        sensors[n+i].id = my_model.n
+        sensors[n+i].type = 'S'
+        sensors[n+i].dis2sink = 0
+        sensors[n+i].layer_number = 5
+        sensors[n+i].hop_count = 0
+        
+        
     for i, sensor in enumerate(sensors[:-1]):
                
         sensor.xd = random.uniform(my_model.x_range[0], my_model.x_range[1])

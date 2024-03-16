@@ -36,15 +36,15 @@ def start(sensors: list[Sensor], my_model: Model, senders: list, receivers: list
             print(f"dist b/w sender: {sender.id} and receiver: {receiver.id} is: {distance}")
 
             if distance > my_model.do:
-                sensors[sender.id].E -= my_model.ETX * PacketSize + my_model.Emp * PacketSize * pow(distance, 4)
+                sensors[sender.id].E -= (my_model.ETX * PacketSize + my_model.Emp * PacketSize * pow(distance, 4))*my_model.NumPacket
                 sent_packets = send_rec(sensors, sender.id, sent_packets)
 
             else:
-                sensors[sender.id].E -= my_model.ETX * PacketSize + my_model.Efs * PacketSize * pow(distance, 2)
+                sensors[sender.id].E -= (my_model.ETX * PacketSize + my_model.Efs * PacketSize * pow(distance, 2))*my_model.NumPacket
                 sent_packets = send_rec(sensors, sender.id, sent_packets)
 
     for receiver in receivers:
-        sensors[receiver.id].E -= (my_model.ERX + my_model.EDA) * PacketSize
+        sensors[receiver.id].E -= ((my_model.ERX + my_model.EDA) * PacketSize)*my_model.NumPacket
 
     # for receivers
     # Energy dissipated from receivers for Receiving a packet, if the sender died during transmission,

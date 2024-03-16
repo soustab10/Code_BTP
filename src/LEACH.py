@@ -49,7 +49,7 @@ class LEACHSimulation:
         self.RRP = zeros(1, self.my_model.rmax + 1)  # number of receive routing packets
         self.SDP = zeros(1, self.my_model.rmax + 1)  # number of sent data packets
         self.RDP = zeros(1, self.my_model.rmax + 1)  # number of receive data packets
-
+        self.rcd_sink = zeros(1, self.my_model.rmax + 1)  # received data packets by sink
         self.layer_heights = [0, -80, -170, -270, -380, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
         self.srp = 0  # counter number of sent routing packets
@@ -173,9 +173,9 @@ class LEACHSimulation:
         y_vals_ch = [node.yd for node in self.Sensors if node.type == 'C']
         z_vals_ch = [node.zd for node in self.Sensors if node.type == 'C']
 
-        sink_x_vals = [sensor.xd for sensor in self.Sensors[-self.my_model.num_sinks:]]
-        sink_y_vals = [sensor.yd for sensor in self.Sensors[-self.my_model.num_sinks:]]
-        sink_z_vals = [sensor.zd for sensor in self.Sensors[-self.my_model.num_sinks:]]
+        sink_x_vals = [sensor.xd for sensor in self.Sensors if sensor.type=='S']
+        sink_y_vals = [sensor.yd for sensor in self.Sensors if sensor.type=='S']
+        sink_z_vals = [sensor.zd for sensor in self.Sensors if sensor.type=='S']
 
 
         x_vals = x_vals[:-self.my_model.num_sinks]
@@ -342,7 +342,8 @@ class LEACHSimulation:
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
-            self.__steady_state_phase_2()
+            # self.__steady_state_phase_2(round_number)
+            self.__steady_state_phase(round_number)
 
             # # if sensor is dead
             self.__check_dead_num(round_number)
@@ -363,7 +364,7 @@ class LEACHSimulation:
         print("Clusters of Current Round:",self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
         
-        if(round_number == 1):
+        if(round_number <= 1):
             self.perform_clustering(self.my_model.clusters_per_layer)
         else:
             cluster_ids_newch = []
@@ -381,7 +382,7 @@ class LEACHSimulation:
         self.__print_sensors()
         # self.__plot_clusters()        
 
-    def __steady_state_phase_2(self):
+    def __steady_state_phase_2(self,round_number):
         print("##############################################")
         print("############# steady state phase #############")
         print("##############################################")
@@ -413,7 +414,7 @@ class LEACHSimulation:
                 while(is_sent_to_sink != True):
                                         
                     nearest_receiver = self.find_valid_receiver_2(sender)
-                            
+                    self.rcd_sink[round_number] += 1      
                             
                     print("Nearest receiver:",nearest_receiver)
                     if(nearest_receiver.hop_count == 1):
@@ -466,7 +467,7 @@ class LEACHSimulation:
                     
 
         
-    def __steady_state_phase(self):
+    def __steady_state_phase(self,round_number):
         print("##############################################")
         print("############# steady state phase #############")
         print("##############################################")
@@ -652,7 +653,8 @@ class LEACHSimulation:
             file.write(f"Sum energy left in all nodes: {self.sum_energy_left_all_nodes}\n")
             file.write(f"Average energy of all sensors: {self.avg_energy_All_sensor}\n")
             file.write(f"Consumed energy: {self.consumed_energy}\n")
-            file.write(f"Enheraf: {self.Enheraf}\n\n")
+            file.write(f"Enheraf: {self.Enheraf}\n")
+            file.write(f"Rcd at Sink: {self.rcd_sink}\n\n")
 
 
         
@@ -770,8 +772,8 @@ class LEACHSimulation:
         #Implement Selction Function
         optimal_receiver = None
         min_value = float('inf')  # Initialize with infinity
-        alpha = 0.5
-        beta= 0.5
+        alpha = 1
+        beta= 0.0
         gamma = 0.0
         base_distance = self.my_model.z * sqrt(3)
         for receiver in receivers:

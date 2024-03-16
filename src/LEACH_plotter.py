@@ -15,7 +15,7 @@ def start(self):
 
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n)
-    plt.plot(self.alive_sensors)
+    plt.plot(self.alive_sensors, color='green')
     plt.title("Life time of sensor nodes")
     plt.xlabel('Rounds')
     plt.ylabel('No. of live nodes')
@@ -24,11 +24,14 @@ def start(self):
 
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
-    plt.plot(self.sum_energy_left_all_nodes)
+    plt.plot(self.sum_energy_left_all_nodes, color='green')
     plt.title("Total residual energy ")
     plt.xlabel('Rounds')
     plt.ylabel('Energy (J)')
     plt.show()
+    
+    
+    
     # n = myModel.n
     # fig, axis = plt.subplots()
     # axis.set_xlim(left=0, right=myModel.x)

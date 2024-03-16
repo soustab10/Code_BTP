@@ -32,7 +32,7 @@ class Model:
         # self.num_clusters = 
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 0.05
+        self.Eo: float = 0.1
         self.E_threshold = 0.10*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
@@ -51,7 +51,7 @@ class Model:
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 400
+        self.rmax = 250
 
         # Data packet size
         self.data_packet_len = 200
@@ -153,7 +153,7 @@ def create_sensors(my_model: Model):
         sensors[n+i].hop_count = 0
         
         
-    for i, sensor in enumerate(sensors[:-1]):
+    for i, sensor in enumerate(sensors[:-my_model.num_sinks]):
                
         sensor.xd = random.uniform(my_model.x_range[0], my_model.x_range[1])
         sensor.yd = random.uniform(my_model.y_range[0], my_model.y_range[1])

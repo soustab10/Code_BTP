@@ -11,7 +11,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from sklearn.cluster import KMeans
 from yellowbrick.cluster import KElbowVisualizer
-
+from matplotlib import rcParams
+rcParams['font.family'] = 'Times New Roman'
+font = {'fontname': 'Times New Roman', 'fontweight': 'bold'}
 from src import LEACH_create_basics
 from src import LEACH_select_ch
 from src import findReceiver
@@ -200,12 +202,13 @@ class LEACHSimulation:
             c="red",
             marker="^",
             label="Sink Nodes",
+            **font
         )
 
-        ax.set_xlabel("X-axis")
-        ax.set_ylabel("Y-axis")
-        ax.set_zlabel("Z-axis")
-        ax.set_title("3D UWSN")
+        ax.set_xlabel("X-axis",**font)
+        ax.set_ylabel("Y-axis",**font)
+        ax.set_zlabel("Z-axis",**font)
+        ax.set_title("3D UWSN",**font)
 
         plt.legend()
         plt.show()
@@ -253,10 +256,10 @@ class LEACHSimulation:
 
         ax.scatter(ch_coordinates['x'], ch_coordinates['y'], ch_coordinates['z'], c='black', marker='x', s=100, label='Cluster Heads')
 
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_zlabel('Z-axis')
-        ax.set_title('3D Sensor Network by Cluster with Cluster Heads')
+        ax.set_xlabel('X-axis',**font)
+        ax.set_ylabel('Y-axis',**font)
+        ax.set_zlabel('Z-axis',**font)
+        ax.set_title('3D Sensor Network by Cluster with Cluster Heads',**font)
         # plt.legend()
         plt.show()
 
@@ -423,9 +426,9 @@ class LEACHSimulation:
                 sender = receiver #CH is the new sender now
                 while(is_sent_to_sink != True):
                                         
-                    nearest_receiver = self.find_valid_receiver_3(sender)
+                    # nearest_receiver = self.find_valid_receiver_3(sender)
                     # nearest_receiver = self.find_valid_receiver_2(sender)
-                    # nearest_receiver = self.find_valid_receiver(sender)
+                    nearest_receiver = self.find_valid_receiver(sender)
                     self.rcd_sink[round_number] += 1      
                             
                     print("Nearest receiver:",nearest_receiver)
@@ -669,6 +672,12 @@ class LEACHSimulation:
             file.write(f"Consumed energy: {self.consumed_energy}\n")
             file.write(f"Enheraf: {self.Enheraf}\n")
             file.write(f"Rcd at Sink: {self.rcd_sink}\n\n")
+            file.write(f"Energy of all nodes:" + "\n")
+            for sensor in self.Sensors:
+                file.write(f"{sensor.id}: {sensor.E},")
+            file.write("\n\n")
+            
+            
 
 
         
@@ -753,21 +762,20 @@ class LEACHSimulation:
         
         
     def find_valid_receiver(self, sender): #for distance based routing
-        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
+        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
         
         
         #Implement Selction Function
-        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
-
+        distances = [(((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) if (((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) <=  self.my_model.tx_range else float('inf') for receiver in receivers]
         if distances:
             nearest_receiver_index = distances.index(min(distances))
             nearest_receiver = receivers[nearest_receiver_index]
             return nearest_receiver
 
-        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id]
+        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id and node.E>0]
 
         # Calculate distances between the sender and each receiver
-        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+        distances = [(((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) if (((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) <=  self.my_model.tx_range else float('inf') for receiver in receivers]
 
         # Find the index of the nearest receiver
         if distances:
@@ -780,7 +788,7 @@ class LEACHSimulation:
     
     
     def find_valid_receiver_2(self, sender): # for mot func
-        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
+        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
         
         
         #Implement Selction Function
@@ -808,7 +816,7 @@ class LEACHSimulation:
         if(optimal_receiver != None):
             return optimal_receiver
 
-        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id]
+        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
 
         min_value = float('inf')  # Initialize with infinity
         
@@ -831,11 +839,11 @@ class LEACHSimulation:
         return optimal_receiver
     
     def find_valid_receiver_3(self, sender): #for dvor
-        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd]
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.E > 0]
         
         
         #Implement Selction Function
-        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+        distances = [(((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) if (((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5) <=  self.my_model.tx_range else float('inf') for receiver in receivers]
 
         if distances:
             nearest_receiver_index = distances.index(min(distances))
@@ -847,7 +855,7 @@ class LEACHSimulation:
         return None
     
     def find_valid_receiver_5(self, sender): #for dvor+hop count
-        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.layer_number > sender.layer_number]
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.layer_number > sender.layer_number and node.E > 0]
         
         
         #Implement Selction Function
@@ -863,7 +871,7 @@ class LEACHSimulation:
         return None
     
     def find_valid_receiver_4(self, sender): #for dvor
-        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd]
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.E > 0]
         
         
         #Implement Selction Function
@@ -880,7 +888,7 @@ class LEACHSimulation:
     
     
     def find_nearest_sink(self, sender):
-        receivers = [node for node in self.Sensors if node.type == 'S']
+        receivers = [node for node in self.Sensors if node.type == 'S' and node.E > 0]
         distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
         nearest_receiver_index = distances.index(min(distances))
         nearest_receiver = receivers[nearest_receiver_index]

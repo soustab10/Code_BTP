@@ -32,7 +32,7 @@ class Model:
         # self.num_clusters = 
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 0.10
+        self.Eo: float = 10
         self.E_threshold = 0.10*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001

@@ -32,7 +32,7 @@ class Model:
         # self.num_clusters = 
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 0.1
+        self.Eo: float = 0.10
         self.E_threshold = 0.10*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
@@ -136,8 +136,8 @@ def create_sensors(my_model: Model):
     #         x_sink.append((i + 1) * step_size)
     #         y_sink.append((j + 1) * step_size)
     
-    x_sink = [125, 250, 375, 125, 250, 375, 125, 250, 375]
-    y_sink = [125, 125, 125, 250, 250, 250, 375, 375, 375]
+    x_sink = [250,125, 250, 375, 125, 375, 125, 250, 375]
+    y_sink = [250,125, 125, 125, 250, 250, 375, 375, 375]
 
             
     

@@ -342,8 +342,8 @@ class LEACHSimulation:
             self.__cluster_head_selection_phase(round_number)
             self.no_of_ch = len(self.list_CH)  # Number of CH in per period
 
-            # self.__steady_state_phase_2(round_number)
-            self.__steady_state_phase(round_number)
+            self.__steady_state_phase_2(round_number)
+            # self.__steady_state_phase(round_number)
 
             # # if sensor is dead
             self.__check_dead_num(round_number)
@@ -363,6 +363,16 @@ class LEACHSimulation:
         print()
         print("Clusters of Current Round:",self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
+        
+        # if(round_number == 1):
+        #     ct=1
+        #     for sensor in self.Sensors[:-self.my_model.num_sinks]:
+        #         sensor.type = 'C'
+        #         self.list_CH.append(sensor)
+        #         sensor.cluster_id=ct
+        #         ct+=1
+        
+        
         
         if(round_number <= 1):
             self.perform_clustering(self.my_model.clusters_per_layer)
@@ -410,14 +420,18 @@ class LEACHSimulation:
                 )
 
                 is_sent_to_sink = False
-                sender = receiver
+                sender = receiver #CH is the new sender now
                 while(is_sent_to_sink != True):
                                         
-                    nearest_receiver = self.find_valid_receiver_2(sender)
+                    nearest_receiver = self.find_valid_receiver_3(sender)
+                    # nearest_receiver = self.find_valid_receiver_2(sender)
+                    # nearest_receiver = self.find_valid_receiver(sender)
                     self.rcd_sink[round_number] += 1      
                             
                     print("Nearest receiver:",nearest_receiver)
-                    if(nearest_receiver.hop_count == 1):
+                    if(nearest_receiver == None):
+                        nearest_receiver = self.find_nearest_sink(sender)
+                    if(nearest_receiver.hop_count <= 1):
                         is_sent_to_sink = True
                         self.receivers = [self.Sensors[self.n]]  # Sink
                         
@@ -738,7 +752,7 @@ class LEACHSimulation:
         self.list_CH.append(cluster_head)
         
         
-    def find_valid_receiver(self, sender):
+    def find_valid_receiver(self, sender): #for distance based routing
         receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
         
         
@@ -765,16 +779,16 @@ class LEACHSimulation:
         return None
     
     
-    def find_valid_receiver_2(self, sender):
+    def find_valid_receiver_2(self, sender): # for mot func
         receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id]
         
         
         #Implement Selction Function
         optimal_receiver = None
         min_value = float('inf')  # Initialize with infinity
-        alpha = 1
-        beta= 0.0
-        gamma = 0.0
+        alpha = 0
+        beta= 1
+        gamma = 0
         base_distance = self.my_model.z * sqrt(3)
         for receiver in receivers:
             depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)
@@ -815,3 +829,59 @@ class LEACHSimulation:
         
         
         return optimal_receiver
+    
+    def find_valid_receiver_3(self, sender): #for dvor
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd]
+        
+        
+        #Implement Selction Function
+        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+              
+        
+        return None
+    
+    def find_valid_receiver_5(self, sender): #for dvor+hop count
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.layer_number > sender.layer_number]
+        
+        
+        #Implement Selction Function
+        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+              
+        
+        return None
+    
+    def find_valid_receiver_4(self, sender): #for dvor
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd]
+        
+        
+        #Implement Selction Function
+        distances = [receiver.E for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(max(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+              
+        
+        return None
+    
+    
+    def find_nearest_sink(self, sender):
+        receivers = [node for node in self.Sensors if node.type == 'S']
+        distances = [((sender.xd - receiver.xd)**2 + (sender.yd - receiver.yd)**2 + (sender.zd - receiver.zd)**2)**0.5 for receiver in receivers]
+        nearest_receiver_index = distances.index(min(distances))
+        nearest_receiver = receivers[nearest_receiver_index]
+        return nearest_receiver

@@ -63,7 +63,7 @@ class LEACHSimulation:
         self.rcd_sink = zeros(
             1, self.my_model.rmax + 1
         )  # received data packets by sink
-        self.layer_heights = [0, -50, -125, -225, -350, -500]
+        self.layer_heights = [0, -20, -80, -180, -320, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
         self.srp = 0  # counter number of sent routing packets
         self.rrp = 0  # counter number of receive routing packets
@@ -118,7 +118,7 @@ class LEACHSimulation:
         self.__create_sen()
 
         self.__print_sensors()
-        self.__plot_sensors()
+        # self.__plot_sensors()
         self.__start_simulation()
 
         # self.__plot_clusters()
@@ -130,7 +130,7 @@ class LEACHSimulation:
         self.avg_e2edelay[0] = self.avg_e2edelay[1]
         plt.xlim(left=0, right=self.my_model.rmax)
         plt.ylim(bottom=0, top=1)
-        plt.plot(self.avg_e2edelay, color="blue")
+        plt.plot(self.avg_e2edelay, color="red")
         plt.title(
             "Average End-to-End Delay (Per Round)",
         )
@@ -208,21 +208,21 @@ class LEACHSimulation:
         z_vals = z_vals[: -self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="blue", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
 
-        # Plot blue planes at specified heights
+        # Plot red planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="blue")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="red")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="blue",
+            c="red",
             marker="^",
             label="Sink Nodes",
         )
@@ -523,9 +523,9 @@ class LEACHSimulation:
                         nearest_receiver = self.find_nearest_sink(sender)
 
                     distance_route += sqrt(
-                        pow((sender.xd - receiver.xd), 2)
-                        + pow((sender.yd - receiver.yd), 2)
-                        + pow((sender.zd - receiver.zd), 2)
+                        pow((sender.xd - nearest_receiver.xd), 2)
+                        + pow((sender.yd - nearest_receiver.yd), 2)
+                        + pow((sender.zd - nearest_receiver.zd), 2)
                     )
                     node_route += 1
 

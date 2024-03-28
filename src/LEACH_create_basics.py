@@ -70,7 +70,7 @@ class Model:
         
         #Layers
         self.num_layers=5
-        self.layer_heights =  [0, -50, -125, -225, -350, -500]
+        self.layer_heights = [0, -20, -80, -180, -320, -500]
         #Fitness function
         self.ff_alpha = 0.5
         
@@ -181,7 +181,7 @@ def create_sensors(my_model: Model):
 
 
 def get_layer_number(z):
-        layer_heights =  [0, -50, -125, -225, -350, -500]
+        layer_heights = [0, -20, -80, -180, -320, -500]
         for i, height in enumerate(layer_heights[::-1], start=0):
             if z <= height:
                 return i

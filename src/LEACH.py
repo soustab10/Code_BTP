@@ -1,7 +1,7 @@
 import pprint
 from math import *
 import matplotlib
-
+import time
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import random
@@ -11,9 +11,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from sklearn.cluster import KMeans
 from yellowbrick.cluster import KElbowVisualizer
-from matplotlib import rcParams
-rcParams['font.family'] = 'Times New Roman'
-font = {'fontname': 'Times New Roman', 'fontweight': 'bold'}
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.weight'] = 'bold'
+
 from src import LEACH_create_basics
 from src import LEACH_select_ch
 from src import findReceiver
@@ -35,7 +35,7 @@ def zeros(row, column):
 
     return re_list
 
-
+avg_e2edelay_md = []
 class LEACHSimulation:
 
     def __init__(self, n=500):
@@ -51,6 +51,8 @@ class LEACHSimulation:
         self.RRP = zeros(1, self.my_model.rmax + 1)  # number of receive routing packets
         self.SDP = zeros(1, self.my_model.rmax + 1)  # number of sent data packets
         self.RDP = zeros(1, self.my_model.rmax + 1)  # number of receive data packets
+        self.avg_e2edelay = zeros(1, self.my_model.rmax + 1)  # number of receive data packets
+        self.pkt_count = zeros(1, self.my_model.rmax + 1)
         self.rcd_sink = zeros(1, self.my_model.rmax + 1)  # received data packets by sink
         self.layer_heights = [0, -80, -170, -270, -380, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
@@ -112,12 +114,20 @@ class LEACHSimulation:
         
         # self.__plot_clusters()
         self.__main_loop()
-        self.__statistics(round_number=self.my_model.rmax)
+        # self.__statistics(round_number=self.my_model.rmax)
         # Todo: all plotting should be done in Leach_plotter file
         
         LEACH_plotter.start(self)
+        avg_e2edelay_md.append(avg_e2edelay_md[-1])
+        plt.xlim(left=0, right=self.my_model.rmax)
+        plt.ylim(bottom=0, top=5)
+        plt.plot(avg_e2edelay_md, color='orange')
+        plt.title("Average End-to-End Delay (Per Round)",)
+        plt.xlabel('Rounds',)
+        plt.ylabel('Delay (s)',)
+        plt.show()
         
-        print(self.list_CH)
+        
         print("-------------------- XXX --------------------")
         print("############# END of simulation #############")
         print("-------------------- XXX --------------------")
@@ -185,30 +195,30 @@ class LEACHSimulation:
         z_vals = z_vals[:-self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="orange", marker="x", label="CHs")
 
-        # Plot blue planes at specified heights
+        # Plot orange planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="blue")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="orange")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="red",
+            c="orange",
             marker="^",
             label="Sink Nodes",
-            **font
+            
         )
 
-        ax.set_xlabel("X-axis",**font)
-        ax.set_ylabel("Y-axis",**font)
-        ax.set_zlabel("Z-axis",**font)
-        ax.set_title("3D UWSN",**font)
+        ax.set_xlabel("X-axis",)
+        ax.set_ylabel("Y-axis",)
+        ax.set_zlabel("Z-axis",)
+        ax.set_title("3D UWSN",)
 
         plt.legend()
         plt.show()
@@ -256,10 +266,10 @@ class LEACHSimulation:
 
         ax.scatter(ch_coordinates['x'], ch_coordinates['y'], ch_coordinates['z'], c='black', marker='x', s=100, label='Cluster Heads')
 
-        ax.set_xlabel('X-axis',**font)
-        ax.set_ylabel('Y-axis',**font)
-        ax.set_zlabel('Z-axis',**font)
-        ax.set_title('3D Sensor Network by Cluster with Cluster Heads',**font)
+        ax.set_xlabel('X-axis',)
+        ax.set_ylabel('Y-axis',)
+        ax.set_zlabel('Z-axis',)
+        ax.set_title('3D Sensor Network by Cluster with Cluster Heads',)
         # plt.legend()
         plt.show()
 
@@ -352,7 +362,8 @@ class LEACHSimulation:
             self.__check_dead_num(round_number)
 
             self.__statistics(round_number)
-
+            if(self.pkt_count[round_number]!=0):                
+                self.avg_e2edelay[round_number] = self.avg_e2edelay[round_number] / self.pkt_count[round_number]
             # if all nodes are dead or only sink is left, exit
             if len(self.dead_num) >= self.n:
                 self.lastPeriod = round_number
@@ -405,6 +416,8 @@ class LEACHSimulation:
         #for each sensor -> send data to its CH ->  CH send data to upper layer/hop count -> If CH_hop count = 1 send data to sink
           
         for sensor in self.Sensors:
+            current_time = time.time()
+            end_time = 0
             sender = None
             receiver = None
             if sensor.type == 'N':
@@ -426,9 +439,9 @@ class LEACHSimulation:
                 sender = receiver #CH is the new sender now
                 while(is_sent_to_sink != True):
                                         
-                    # nearest_receiver = self.find_valid_receiver_3(sender)
-                    # nearest_receiver = self.find_valid_receiver_2(sender)
-                    nearest_receiver = self.find_valid_receiver(sender)
+                    # nearest_receiver = self.find_valid_receiver_5(sender)
+                    nearest_receiver = self.find_valid_receiver_2(sender)
+                    # nearest_receiver = self.find_valid_receiver(sender)
                     self.rcd_sink[round_number] += 1      
                             
                     print("Nearest receiver:",nearest_receiver)
@@ -466,6 +479,10 @@ class LEACHSimulation:
                             self.sdp,
                             self.rdp,
                             packet_type="Data")
+                        end_time= time.time()
+                        self.avg_e2edelay[round_number] += end_time - current_time
+                        self.pkt_count[round_number]+=1
+                        
                     else:
                         self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
                             self.Sensors,
@@ -664,17 +681,20 @@ class LEACHSimulation:
             file.write(f"SDP: {self.SDP}\n")
             file.write(f"RDP: {self.RDP}\n")
             file.write("----------------------------------------------\n")
-            file.write(f"Sum of dead nodes: {self.sum_dead_nodes}\n")
-            file.write(f"CH per round: {self.ch_per_round}\n")
-            file.write(f"Alive sensors: {self.alive_sensors}\n")
-            file.write(f"Sum energy left in all nodes: {self.sum_energy_left_all_nodes}\n")
-            file.write(f"Average energy of all sensors: {self.avg_energy_All_sensor}\n")
-            file.write(f"Consumed energy: {self.consumed_energy}\n")
-            file.write(f"Enheraf: {self.Enheraf}\n")
-            file.write(f"Rcd at Sink: {self.rcd_sink}\n\n")
+            file.write(f"Sum of dead nodes: {self.sum_dead_nodes[round_number]}\n")
+            file.write(f"CH per round: {self.ch_per_round[round_number]}\n")
+            file.write(f"Alive sensors: {self.alive_sensors[round_number]}\n")
+            file.write(f"Sum energy left in all nodes: {self.sum_energy_left_all_nodes[round_number]}\n")
+            file.write(f"Average energy of all sensors: {self.avg_energy_All_sensor[round_number]}\n")
+            file.write(f"Consumed energy: {self.consumed_energy[round_number]}\n")
+            file.write(f"Enheraf: {self.Enheraf[round_number]}\n")
+            file.write(f"Rcd at Sink: {self.rcd_sink[round_number]}\n\n")
+            file.write(f"Avg E2E Delay: {self.avg_e2edelay[round_number]}\n")
+            avg_e2edelay_md.append(self.avg_e2edelay[round_number])
+            file.write(f"Packets Received: {self.pkt_count[round_number]}\n")
             file.write(f"Energy of all nodes:" + "\n")
             for sensor in self.Sensors:
-                file.write(f"{sensor.id}: {sensor.E},")
+                file.write(f" {sensor.id}: {sensor.E}, ")
             file.write("\n\n")
             
             
@@ -788,14 +808,14 @@ class LEACHSimulation:
     
     
     def find_valid_receiver_2(self, sender): # for mot func
-        receivers = [node for node in self.Sensors if node.hop_count < sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
+        receivers = [node for node in self.Sensors if node.zd >= sender.zd and node.type == 'C' and node.id != sender.id and node.E > 0]
         
         
         #Implement Selction Function
         optimal_receiver = None
         min_value = float('inf')  # Initialize with infinity
-        alpha = 0
-        beta= 1
+        alpha = 1
+        beta= 0
         gamma = 0
         base_distance = self.my_model.z * sqrt(3)
         for receiver in receivers:
@@ -816,7 +836,7 @@ class LEACHSimulation:
         if(optimal_receiver != None):
             return optimal_receiver
 
-        receivers = [node for node in self.Sensors if node.hop_count == sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
+        receivers = [node for node in self.Sensors if node.hop_count <= sender.hop_count and node.type == 'C' and node.id != sender.id and node.E > 0]
 
         min_value = float('inf')  # Initialize with infinity
         
@@ -871,7 +891,18 @@ class LEACHSimulation:
         return None
     
     def find_valid_receiver_4(self, sender): #for dvor
-        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.E > 0]
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd > sender.zd and node.layer_number>sender.layer_number and node.E > 0]
+        
+        
+        #Implement Selction Function
+        distances = [receiver.E for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(max(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+        
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd > sender.zd and node.layer_number==sender.layer_number and node.E > 0]
         
         
         #Implement Selction Function

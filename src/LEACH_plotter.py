@@ -4,16 +4,12 @@ from src.LEACH_create_basics import *
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
 
-# Set Times New Roman as the default font family
-rcParams['font.family'] = 'Times New Roman'
-
-# Define a font dictionary for bold text
-font = {'fontname': 'Times New Roman', 'fontweight': 'bold'}
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.weight'] = 'bold'
 
 
-# todo: add condition to show sink only as red dot and not both red and blue
+# todo: add condition to show sink only as orange dot and not both orange and orange
 def start(self):
     print('########################################')
     print('############# plot Sensors #############')
@@ -22,21 +18,24 @@ def start(self):
 
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n)
-    plt.plot(self.alive_sensors, color='green')
-    plt.title("Life time of sensor nodes",**font)
-    plt.xlabel('Rounds',**font)
-    plt.ylabel('No. of live nodes',**font)
+    plt.plot(self.alive_sensors, color='orange')
+    plt.title("Life time of sensor nodes",)
+    plt.xlabel('Rounds',)
+    plt.ylabel('No. of live nodes',)
     # plt.ioff()
     plt.show()
 
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
-    plt.plot(self.sum_energy_left_all_nodes, color='green')
-    plt.title("Total residual energy",**font)
-    plt.xlabel('Rounds',**font)
-    plt.ylabel('Energy (J)',**font)
+    self.sum_energy_left_all_nodes[0]=self.sum_energy_left_all_nodes[1]
+    plt.plot(self.sum_energy_left_all_nodes, color='orange')
+    plt.title("Total residual energy",)
+    plt.xlabel('Rounds',)
+    plt.ylabel('Energy (J)',)
     plt.show()
-    
+
+    print(self.avg_e2edelay)
+
     
     
     # n = myModel.n

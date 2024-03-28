@@ -51,7 +51,7 @@ class Model:
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
         # maximum number of rounds
-        self.rmax = 250
+        self.rmax = 750
         # Data packet size
         self.data_packet_len = 200
 
@@ -70,7 +70,7 @@ class Model:
         
         #Layers
         self.num_layers=5
-        self.layer_heights = [0, -80, -170, -270, -380, -500]
+        self.layer_heights = [0, -50, -125, -225, -350, -500]
         
         #Fitness function
         self.ff_alpha = 0.5
@@ -182,7 +182,7 @@ def create_sensors(my_model: Model):
 
 
 def get_layer_number(z):
-        layer_heights = [0, -80, -170, -270, -380, -500]
+        layer_heights =   [0, -50, -125, -225, -350, -500]
         for i, height in enumerate(layer_heights[::-1], start=0):
             if z <= height:
                 return i

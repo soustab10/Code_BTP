@@ -121,7 +121,7 @@ class LEACHSimulation:
         avg_e2edelay_md.append(avg_e2edelay_md[-1])
         plt.xlim(left=0, right=self.my_model.rmax)
         plt.ylim(bottom=0, top=5)
-        plt.plot(avg_e2edelay_md, color='orange')
+        plt.plot(avg_e2edelay_md, color='purple')
         plt.title("Average End-to-End Delay (Per Round)",)
         plt.xlabel('Rounds',)
         plt.ylabel('Delay (s)',)
@@ -195,21 +195,21 @@ class LEACHSimulation:
         z_vals = z_vals[:-self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="orange", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="purple", marker="x", label="CHs")
 
-        # Plot orange planes at specified heights
+        # Plot purple planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="orange")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="purple")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="orange",
+            c="purple",
             marker="^",
             label="Sink Nodes",
             
@@ -440,8 +440,8 @@ class LEACHSimulation:
                 while(is_sent_to_sink != True):
                                         
                     # nearest_receiver = self.find_valid_receiver_5(sender)
-                    nearest_receiver = self.find_valid_receiver_2(sender)
-                    # nearest_receiver = self.find_valid_receiver(sender)
+                    # nearest_receiver = self.find_nearest_sink(sender)
+                    nearest_receiver = self.find_valid_receiver_4(sender)
                     self.rcd_sink[round_number] += 1      
                             
                     print("Nearest receiver:",nearest_receiver)
@@ -883,6 +883,18 @@ class LEACHSimulation:
 
         if distances:
             nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+        
+    def find_valid_receiver_6(self, sender): #for dvor+hop count
+        receivers = [node for node in self.Sensors if node.type == 'C' and node.id != sender.id and node.zd >= sender.zd and node.E > 0]
+        
+        
+        #Implement Selction Function
+        distances = [receiver.E for receiver in receivers]
+
+        if distances:
+            nearest_receiver_index = distances.index(max(distances))
             nearest_receiver = receivers[nearest_receiver_index]
             return nearest_receiver
 

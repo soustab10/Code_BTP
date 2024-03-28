@@ -33,7 +33,7 @@ class Model:
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
         self.Eo: float = 2
-        self.E_threshold = 0.10*self.Eo
+        self.E_threshold = 0.40*self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
         self.ETX: float = 10* 10e-12
@@ -70,8 +70,7 @@ class Model:
         
         #Layers
         self.num_layers=5
-        self.layer_heights = [0, -50, -125, -225, -350, -500]
-        
+        self.layer_heights =  [0, -50, -125, -225, -350, -500]
         #Fitness function
         self.ff_alpha = 0.5
         
@@ -145,7 +144,7 @@ def create_sensors(my_model: Model):
         sensors[n+i].yd = y_sink[i]
         sensors[n+i].zd = my_model.sink_z
         sensors[n+i].E = my_model.sinkE
-        sensors[n+i].id = my_model.n
+        sensors[n+i].id = my_model.n + i
         sensors[n+i].type = 'S'
         sensors[n+i].dis2sink = 0
         sensors[n+i].layer_number = 5
@@ -182,7 +181,7 @@ def create_sensors(my_model: Model):
 
 
 def get_layer_number(z):
-        layer_heights =   [0, -50, -125, -225, -350, -500]
+        layer_heights =  [0, -50, -125, -225, -350, -500]
         for i, height in enumerate(layer_heights[::-1], start=0):
             if z <= height:
                 return i

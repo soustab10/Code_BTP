@@ -9,7 +9,7 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['font.weight'] = 'bold'
 
 
-# todo: add condition to show sink only as purple dot and not both purple and purple
+# todo: add condition to show sink only as blue dot and not both blue and blue
 def start(self):
     print('########################################')
     print('############# plot Sensors #############')
@@ -18,7 +18,7 @@ def start(self):
 
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n)
-    plt.plot(self.alive_sensors, color='purple')
+    plt.plot(self.alive_sensors, color='blue')
     plt.title("Life time of sensor nodes",)
     plt.xlabel('Rounds',)
     plt.ylabel('No. of live nodes',)
@@ -28,7 +28,7 @@ def start(self):
     plt.xlim(left=0, right=self.my_model.rmax)
     plt.ylim(bottom=0, top=self.n * self.my_model.Eo)
     self.sum_energy_left_all_nodes[0]=self.sum_energy_left_all_nodes[1]
-    plt.plot(self.sum_energy_left_all_nodes, color='purple')
+    plt.plot(self.sum_energy_left_all_nodes, color='blue')
     plt.title("Total residual energy",)
     plt.xlabel('Rounds',)
     plt.ylabel('Energy (J)',)

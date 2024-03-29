@@ -63,7 +63,7 @@ class LEACHSimulation:
         self.rcd_sink = zeros(
             1, self.my_model.rmax + 1
         )  # received data packets by sink
-        self.layer_heights = [0, -20, -80, -180, -320, -500]
+        self.layer_heights = [0, -80, -170, -270, -380, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
         self.srp = 0  # counter number of sent routing packets
         self.rrp = 0  # counter number of receive routing packets
@@ -130,7 +130,7 @@ class LEACHSimulation:
         self.avg_e2edelay[0] = self.avg_e2edelay[1]
         plt.xlim(left=0, right=self.my_model.rmax)
         plt.ylim(bottom=0, top=1)
-        plt.plot(self.avg_e2edelay, color="pink")
+        plt.plot(self.avg_e2edelay, color="brown")
         plt.title(
             "Average End-to-End Delay (Per Round)",
         )
@@ -208,21 +208,21 @@ class LEACHSimulation:
         z_vals = z_vals[: -self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="pink", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="brown", marker="x", label="CHs")
 
-        # Plot pink planes at specified heights
+        # Plot brown planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="pink")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="brown")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="pink",
+            c="brown",
             marker="^",
             label="Sink Nodes",
         )
@@ -428,10 +428,8 @@ class LEACHSimulation:
         print()
         # print("Clusters of Current Round:",self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
-
-        # if(round_number == 1):
-        #     ct=1
-        #     for sensor in self.Sensors[:-self.my_model.num_sinks]:
+        # ct=1
+        # for sensor in self.Sensors[:-self.my_model.num_sinks]:
         #         sensor.type = 'C'
         #         self.list_CH.append(sensor)
         #         sensor.cluster_id=ct
@@ -514,7 +512,7 @@ class LEACHSimulation:
 
                     # nearest_receiver = self.find_valid_receiver_5(sender)
                     # nearest_receiver = self.find_nearest_sink(sender)
-                    nearest_receiver = self.find_valid_receiver_2(sender)
+                    nearest_receiver = self.find_valid_receiver_4(sender)
                     self.rcd_sink[round_number] += 1
 
                     # print("Nearest receiver:", nearest_receiver)
@@ -858,6 +856,8 @@ class LEACHSimulation:
                     cluster_nodes = [
                         node for node in self.Sensors if node.cluster_id == cluster_id
                     ]
+                    if(len(cluster_nodes)==0):
+                        continue
                     fitness_scores = [
                         self.calculate_fitness(node, cluster_id, cluster_nodes)
                         for node in self.Sensors
@@ -899,6 +899,8 @@ class LEACHSimulation:
         fitness = 0.00
         distance_to_cluster_center = []
         for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
             distance_to_cluster_center.append(
                 (node.xd - cluster_node.xd) ** 2
                 + (node.yd - cluster_node.yd) ** 2
@@ -906,6 +908,8 @@ class LEACHSimulation:
             )
 
         for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
             distance_to_node = (
                 (node.xd - cluster_node.xd) ** 2
                 + (node.yd - cluster_node.yd) ** 2

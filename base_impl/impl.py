@@ -146,18 +146,18 @@ class UnderwaterWSN:
 
         ax.scatter(x_vals, y_vals, z_vals, c='b', marker='o', label='Nodes')
 
-        # Plot pink planes at specified heights
+        # Plot brown planes at specified heights
         for height in layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.3, color='pink')
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.3, color='brown')
 
         sink_x_vals = [sink.x for sink in self.sinks]
         sink_y_vals = [sink.y for sink in self.sinks]
         sink_z_vals = [sink.z for sink in self.sinks]
-        ax.scatter(sink_x_vals, sink_y_vals, sink_z_vals, c='pink', marker='^', label='Sink Nodes')
+        ax.scatter(sink_x_vals, sink_y_vals, sink_z_vals, c='brown', marker='^', label='Sink Nodes')
 
         ax.set_xlabel('X-axis')
         ax.set_ylabel('Y-axis')
@@ -291,7 +291,7 @@ class UnderwaterWSN:
         for ch in self.cluster_heads:
             ax.scatter(ch.x, ch.y, ch.z, c='black', marker='x', label=f'Cluster Head {ch.node_id} - Layer {ch.layer_number}')
         for sink in self.sinks:
-            ax.scatter(sink.x, sink.y, sink.z, c='pink', marker='^', label=f'Sink {sink.sink_id}')
+            ax.scatter(sink.x, sink.y, sink.z, c='brown', marker='^', label=f'Sink {sink.sink_id}')
             
         
 

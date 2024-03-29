@@ -50,7 +50,7 @@ curr_round=0
 num_layers=5
 layer_heights = [0,-80,-170,-270,-380,-500]
 
-#If all layers are considered to be same height, layer_height = tx_range
+#If all layers are considepink to be same height, layer_height = tx_range
 # layer_heights = [0,100,200,300,400,500]
 
 

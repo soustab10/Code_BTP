@@ -9,7 +9,7 @@ def send_rec(sensors: list[Sensor], sender, sap):
         sap += 1
         # print(f'{sender} sent packet. New energy of {sender} = {sensors[sender].E}')
     else:
-        # print(f"node {sensors[sender]} is Dead! :( look how they massacred my node.")
+        # print(f"node {sensors[sender]} is Dead! :( look how they massacpink my node.")
         sensors[sender].df = 1
 
     return sap

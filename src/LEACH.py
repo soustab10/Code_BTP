@@ -130,7 +130,7 @@ class LEACHSimulation:
         self.avg_e2edelay[0] = self.avg_e2edelay[1]
         plt.xlim(left=0, right=self.my_model.rmax)
         plt.ylim(bottom=0, top=1)
-        plt.plot(self.avg_e2edelay, color="red")
+        plt.plot(self.avg_e2edelay, color="pink")
         plt.title(
             "Average End-to-End Delay (Per Round)",
         )
@@ -208,21 +208,21 @@ class LEACHSimulation:
         z_vals = z_vals[: -self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="red", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="pink", marker="x", label="CHs")
 
-        # Plot red planes at specified heights
+        # Plot pink planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="red")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="pink")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="red",
+            c="pink",
             marker="^",
             label="Sink Nodes",
         )
@@ -514,7 +514,7 @@ class LEACHSimulation:
 
                     # nearest_receiver = self.find_valid_receiver_5(sender)
                     # nearest_receiver = self.find_nearest_sink(sender)
-                    nearest_receiver = self.find_valid_receiver(sender)
+                    nearest_receiver = self.find_valid_receiver_2(sender)
                     self.rcd_sink[round_number] += 1
 
                     # print("Nearest receiver:", nearest_receiver)
@@ -1026,12 +1026,23 @@ class LEACHSimulation:
         return None
 
     def find_valid_receiver_2(self, sender):  # for mot func
+        # receivers = [
+        #     node
+        #     for node in self.Sensors
+        #     if node.zd >= sender.zd
+        #     and node.type == "C"
+        #     and node.id != sender.id
+        #     and node.layer_number = sender.layer_number
+        #     and node.E > 0
+        # ]
+        
         receivers = [
             node
             for node in self.Sensors
             if node.zd >= sender.zd
             and node.type == "C"
             and node.id != sender.id
+            and node.layer_number > sender.layer_number + 1
             and node.E > 0
         ]
 
@@ -1039,9 +1050,9 @@ class LEACHSimulation:
         optimal_receiver = None
         min_value = float("inf")  # Initialize with infinity
         alpha = 1
-        beta = 0
-        gamma = 0
-        base_distance = self.my_model.z * sqrt(3)
+        beta = 0.0
+        gamma = 0.0
+        base_distance = self.my_model.z * sqrt(3) / 5
         for receiver in receivers:
             depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)
             e_res = receiver.E / self.my_model.Eo
@@ -1066,9 +1077,44 @@ class LEACHSimulation:
         receivers = [
             node
             for node in self.Sensors
-            if node.hop_count <= sender.hop_count
+            if node.hop_count < sender.hop_count
             and node.type == "C"
             and node.id != sender.id
+            and node.zd > sender.zd
+            and node.E > 0
+        ]
+
+        min_value = float("inf")  # Initialize with infinity
+
+        base_distance = self.my_model.z * sqrt(3)
+        for receiver in receivers:
+            depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)
+            e_res = receiver.E / self.my_model.Eo
+            distance = (
+                (sender.xd - receiver.xd) ** 2
+                + (sender.yd - receiver.yd) ** 2
+                + (sender.zd - receiver.zd) ** 2
+            ) ** 0.5
+            distance = distance / base_distance
+
+            # Calculate the value of the expression
+            value = alpha * e_res + beta * distance + gamma * depth_diff
+
+            # Update optimal receiver if the calculated value is lower
+            if value < min_value:
+                min_value = value
+                optimal_receiver = receiver
+
+        if optimal_receiver != None:
+            return optimal_receiver
+        
+        receivers = [
+            node
+            for node in self.Sensors
+            if node.hop_count == sender.hop_count
+            and node.type == "C"
+            and node.id != sender.id
+            and node.zd > sender.zd
             and node.E > 0
         ]
 
@@ -1189,9 +1235,8 @@ class LEACHSimulation:
             node
             for node in self.Sensors
             if node.type == "C"
-            and node.id != sender.id
-            and node.zd > sender.zd
-            and node.layer_number > sender.layer_number
+            and node.id != sender.id            
+            and node.layer_number == sender.layer_number + 1
             and node.E > 0
         ]
 
@@ -1208,8 +1253,7 @@ class LEACHSimulation:
             for node in self.Sensors
             if node.type == "C"
             and node.id != sender.id
-            and node.zd > sender.zd
-            and node.layer_number == sender.layer_number
+            and node.zd >= sender.zd
             and node.E > 0
         ]
 

@@ -63,7 +63,7 @@ class LEACHSimulation:
         self.rcd_sink = zeros(
             1, self.my_model.rmax + 1
         )  # received data packets by sink
-        self.layer_heights = [0, -20, -80, -180, -320, -500]
+        self.layer_heights = [0, -80, -170, -270, -380, -500]
         # counter for bit transmitted to Bases Station and Cluster Heads
         self.srp = 0  # counter number of sent routing packets
         self.rrp = 0  # counter number of receive routing packets
@@ -129,8 +129,8 @@ class LEACHSimulation:
         LEACH_plotter.start(self)
         self.avg_e2edelay[0] = self.avg_e2edelay[1]
         plt.xlim(left=0, right=self.my_model.rmax)
-        plt.ylim(bottom=0, top=1)
-        plt.plot(self.avg_e2edelay, color="pink")
+        plt.ylim(bottom=0, top=1.5)
+        plt.plot(self.avg_e2edelay, color="olive")
         plt.title(
             "Average End-to-End Delay (Per Round)",
         )
@@ -208,21 +208,21 @@ class LEACHSimulation:
         z_vals = z_vals[: -self.my_model.num_sinks]
 
         ax.scatter(x_vals, y_vals, z_vals, c="b", marker="o", label="Nodes")
-        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="pink", marker="x", label="CHs")
+        # ax.scatter(x_vals_ch, y_vals_ch, z_vals_ch, c="olive", marker="x", label="CHs")
 
-        # Plot pink planes at specified heights
+        # Plot olive planes at specified heights
         for height in self.layer_heights:
             x_plane = np.linspace(min(x_vals), max(x_vals), 100)
             y_plane = np.linspace(min(y_vals), max(y_vals), 100)
             x_plane, y_plane = np.meshgrid(x_plane, y_plane)
             z_plane = np.full_like(x_plane, height)
-            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="pink")
+            ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.1, color="olive")
 
         ax.scatter(
             sink_x_vals,
             sink_y_vals,
             sink_z_vals,
-            c="pink",
+            c="olive",
             marker="^",
             label="Sink Nodes",
         )
@@ -428,10 +428,8 @@ class LEACHSimulation:
         print()
         # print("Clusters of Current Round:",self.list_CH)
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
-
-        # if(round_number == 1):
-        #     ct=1
-        #     for sensor in self.Sensors[:-self.my_model.num_sinks]:
+        # ct=1
+        # for sensor in self.Sensors[:-self.my_model.num_sinks]:
         #         sensor.type = 'C'
         #         self.list_CH.append(sensor)
         #         sensor.cluster_id=ct
@@ -443,27 +441,27 @@ class LEACHSimulation:
         # self.list_CH = []
         # self.perform_clustering(self.my_model.clusters_per_layer)
 
-        if round_number <= 1:
-            self.perform_clustering_main()
-        else:
-            cluster_ids_newch = []
-            for cluster_head in self.list_CH:
-                if (
-                    cluster_head.E <= self.my_model.E_threshold
-                    and cluster_head.type != "S"
-                ):
-                    cluster_head.type = "N"
-                    cluster_ids_newch.append(cluster_head.cluster_id)
+        # if round_number <= 1:
+        #     self.perform_clustering()
+        # else:
+        #     cluster_ids_newch = []
+        #     for cluster_head in self.list_CH:
+        #         if (
+        #             cluster_head.E <= self.my_model.E_threshold
+        #             and cluster_head.type != "S"
+        #         ):
+        #             cluster_head.type = "N"
+        #             cluster_ids_newch.append(cluster_head.cluster_id)
 
-            self.list_CH = [
-                ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch
-            ]
-            print(
-                "Cluster Head Relected ***************************************",
-                len(cluster_ids_newch),
-            )
-            for c_id in cluster_ids_newch:
-                self.perform_cluster_id_new_ch_2(c_id)
+        #     self.list_CH = [
+        #         ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch
+        #     ]
+        #     print(
+        #         "Cluster Head Relected ***************************************",
+        #         len(cluster_ids_newch),
+        #     )
+        #     for c_id in cluster_ids_newch:
+        #         self.perform_cluster_id_new_ch_2(c_id)
 
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
         # self.__print_sensors()
@@ -484,37 +482,37 @@ class LEACHSimulation:
             sender = None
             receiver = None
             if sensor.type == "N":
-                receiver = [
-                    node
-                    for node in self.Sensors
-                    if node.cluster_id == sensor.cluster_id and node.type == "C"
-                ][0]
-                sender = sensor
-                distance_route += sqrt(
-                    pow((sender.xd - receiver.xd), 2)
-                    + pow((sender.yd - receiver.yd), 2)
-                    + pow((sender.zd - receiver.zd), 2)
-                )
-                node_route += 1
-                self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
-                    self.Sensors,
-                    self.my_model,
-                    [sender],
-                    [receiver],
-                    self.srp,
-                    self.rrp,
-                    self.sdp,
-                    self.rdp,
-                    packet_type="Data",
-                )
+                # receiver = [
+                #         node
+                #         for node in self.Sensors
+                #         if node.cluster_id == sensor.cluster_id and node.type == "C"
+                #     ][0]
+                # sender = sensor
+                # distance_route += sqrt(
+                #         pow((sender.xd - receiver.xd), 2)
+                #         + pow((sender.yd - receiver.yd), 2)
+                #         + pow((sender.zd - receiver.zd), 2)
+                #     )
+                # node_route += 1
+                # self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
+                #         self.Sensors,
+                #         self.my_model,
+                #         [sender],
+                #         [receiver],
+                #         self.srp,
+                #         self.rrp,
+                #         self.sdp,
+                #         self.rdp,
+                #         packet_type="Data",
+                #     )
 
                 is_sent_to_sink = False
-                sender = receiver  # CH is the new sender now
+                sender = sensor  # CH is the new sender now
                 while is_sent_to_sink != True:
 
                     # nearest_receiver = self.find_valid_receiver_5(sender)
                     # nearest_receiver = self.find_nearest_sink(sender)
-                    nearest_receiver = self.find_valid_receiver_2(sender)
+                    nearest_receiver = self.find_valid_receiver_7(sender)
                     self.rcd_sink[round_number] += 1
 
                     # print("Nearest receiver:", nearest_receiver)
@@ -799,7 +797,7 @@ class LEACHSimulation:
 
         # print("----------------------------------------------")
 
-    def perform_clustering(self, k):
+    def perform_clustering(self):
         total_depth = abs(self.my_model.z_range[0] - self.my_model.z_range[1])
 
         # Iterate through layers
@@ -812,6 +810,7 @@ class LEACHSimulation:
 
             # Combine node coordinates into a single array for clustering
             node_coordinates = [[node.xd, node.yd, node.zd] for node in layer_nodes]
+            k = len(layer_nodes) // self.my_model.clusters_per_layer
             # print(node_coordinates)
             # Use KMeans clustering with explicit n_init
             kmeans = KMeans(
@@ -833,7 +832,7 @@ class LEACHSimulation:
 
     def perform_clustering_main(self):
         cluster_id = 1
-        block_size = 500 / sqrt(
+        block_size = self.my_model.x / sqrt(
             self.my_model.clusters_per_layer
         )  # Calculate size of each block
         itr = int(np.sqrt(self.my_model.clusters_per_layer))
@@ -858,6 +857,8 @@ class LEACHSimulation:
                     cluster_nodes = [
                         node for node in self.Sensors if node.cluster_id == cluster_id
                     ]
+                    if len(cluster_nodes) == 0:
+                        continue
                     fitness_scores = [
                         self.calculate_fitness(node, cluster_id, cluster_nodes)
                         for node in self.Sensors
@@ -899,6 +900,8 @@ class LEACHSimulation:
         fitness = 0.00
         distance_to_cluster_center = []
         for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
             distance_to_cluster_center.append(
                 (node.xd - cluster_node.xd) ** 2
                 + (node.yd - cluster_node.yd) ** 2
@@ -906,16 +909,42 @@ class LEACHSimulation:
             )
 
         for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
             distance_to_node = (
                 (node.xd - cluster_node.xd) ** 2
                 + (node.yd - cluster_node.yd) ** 2
                 + (node.zd - cluster_node.zd) ** 2
             )
-            fitness += (
-                self.my_model.ff_alpha
-                * (1.0 - distance_to_node / max(distance_to_cluster_center))
-                + (1.0 - self.my_model.ff_alpha) * node.E / self.my_model.Eo
-            )  # Final Fitness Func FF
+            fitness += distance_to_node  # Final Fitness Func FF
+            # fitness += (
+            #     self.my_model.ff_alpha
+            #     * (1.0 - distance_to_node / max(distance_to_cluster_center))
+            #     + (1.0 - self.my_model.ff_alpha) * node.E / self.my_model.Eo
+            # )  # Final Fitness Func FF
+
+        return fitness
+
+    def calculate_fitness_eecrap(self, node, ch_id, cluster_nodes):
+
+        # print("Node:clusterId:",node.cluster_id)
+
+        fitness = 0.00
+
+        for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
+            distance_to_node = (
+                (node.xd - cluster_node.xd) ** 2
+                + (node.yd - cluster_node.yd) ** 2
+                + (node.zd - cluster_node.zd) ** 2
+            )
+            if distance_to_node != 0:
+                fitness -= self.my_model.ff_alpha / distance_to_node + (
+                    1.0 - self.my_model.ff_alpha
+                ) * (node.E)
+            else:
+                fitness += 0
 
         return fitness
 
@@ -1035,14 +1064,14 @@ class LEACHSimulation:
         #     and node.layer_number = sender.layer_number
         #     and node.E > 0
         # ]
-        
+
         receivers = [
             node
             for node in self.Sensors
             if node.zd >= sender.zd
             and node.type == "C"
             and node.id != sender.id
-            and node.layer_number > sender.layer_number + 1
+            and node.layer_number == sender.layer_number + 1
             and node.E > 0
         ]
 
@@ -1107,7 +1136,7 @@ class LEACHSimulation:
 
         if optimal_receiver != None:
             return optimal_receiver
-        
+
         receivers = [
             node
             for node in self.Sensors
@@ -1230,23 +1259,64 @@ class LEACHSimulation:
 
         return None
 
-    def find_valid_receiver_4(self, sender):  # for dvor
+    def find_valid_receiver_7(self, sender): #dvor
         receivers = [
             node
             for node in self.Sensors
-            if node.type == "C"
-            and node.id != sender.id            
-            and node.layer_number == sender.layer_number + 1
+            if node.type == "N"
+            and node.id != sender.id
+            and node.zd >= sender.zd
             and node.E > 0
         ]
 
         # Implement Selction Function
-        distances = [receiver.E for receiver in receivers]
+        distances = [
+            (
+                (sender.xd - receiver.xd) ** 2
+                + (sender.yd - receiver.yd) ** 2
+                + (sender.zd - receiver.zd) ** 2
+            )
+            ** 0.5
+            for receiver in receivers
+        ]
 
         if distances:
-            nearest_receiver_index = distances.index(max(distances))
+            nearest_receiver_index = distances.index(min(distances))
             nearest_receiver = receivers[nearest_receiver_index]
             return nearest_receiver
+
+        return None
+
+    def find_valid_receiver_4(self, sender):  # for dbr
+        receivers = [
+            node
+            for node in self.Sensors
+            if node.type == "N"
+            and node.id != sender.id
+            and node.zd >= sender.zd
+            and node.E > 0
+        ]
+
+        # Implement Selction Function
+        # distances = [receiver.E for receiver in receivers]
+        distances = [
+            abs(receiver.zd - sender.zd)
+            for receiver in receivers
+            if (
+                (sender.xd - receiver.xd) ** 2
+                + (sender.yd - receiver.yd) ** 2
+                + (sender.zd - receiver.zd) ** 2
+            )
+            ** 0.5
+            <= self.my_model.tx_range
+        ]
+
+        if distances:
+            nearest_receiver_index = distances.index(min(distances))
+            nearest_receiver = receivers[nearest_receiver_index]
+            return nearest_receiver
+
+        return None
 
         receivers = [
             node
@@ -1268,7 +1338,8 @@ class LEACHSimulation:
         return None
 
     def find_nearest_sink(self, sender):
-        receivers = [node for node in self.Sensors if node.type == "S" and node.E > 0]
+        receivers = [node for node in self.Sensors if node.type == "S" and node.E >= 0]
+
         distances = [
             (
                 (sender.xd - receiver.xd) ** 2
@@ -1278,6 +1349,8 @@ class LEACHSimulation:
             ** 0.5
             for receiver in receivers
         ]
+        if len(distances) == 0:
+            return self.Sensors[self.my_model.n]
         nearest_receiver_index = distances.index(min(distances))
         nearest_receiver = receivers[nearest_receiver_index]
         return nearest_receiver

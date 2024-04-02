@@ -13,6 +13,8 @@ class Model:
         self.z = -500
 
         self.x_range = (0, 500)
+
+        self.x_range = (0, 500)
         self.y_range = (0, 500)
         self.z_range = (-500, 0)
         # Sink Motion pattern
@@ -27,7 +29,16 @@ class Model:
         self.tx_range = 100
         self.freq = 10000
         self.data_rate = 35000
+        self.freq = 10000
+        self.data_rate = 35000
         self.f_khz = 10
+        self.alpha_f = (
+            0.11 * self.f_khz**2 / (1 + self.f_khz**2)
+            + 44 * self.f_khz**2 / (4100 + self.f_khz**2)
+            + 0.003
+            + 2.75e-4 * self.f_khz**2
+        )
+        # self.num_clusters =
         self.alpha_f = (
             0.11 * self.f_khz**2 / (1 + self.f_khz**2)
             + 44 * self.f_khz**2 / (4100 + self.f_khz**2)
@@ -42,6 +53,7 @@ class Model:
         # ETX = Energy dissipated in Transmission, ERX = in Receive
         self.Eelec: float = 50 * 0.000000001
         self.ETX: float = 10 * 10e-12
+        self.ETX: float = 10 * 10e-12
         self.ERX: float = 10 * 10e-12
 
         # Transmit Amplifier types
@@ -52,6 +64,7 @@ class Model:
         self.EDA: float = 5 * 0.000000001
 
         # Computation of do
+        self.do: float = sqrt(self.Efs / self.Emp)
         self.do: float = sqrt(self.Efs / self.Emp)
 
         # %%%%%%%%%%%%%%%%%%%%%%%%% Run Time Parameters %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,8 +83,14 @@ class Model:
         self.RR: float = self.tx_range
 
         self.attn = 10 ** (self.alpha_f / 10)
+        self.attn = 10 ** (self.alpha_f / 10)
 
         self.speed_sound = 1500
+
+        # Layers
+        self.num_layers = 5
+        self.layer_heights = [0, -80, -170, -270, -380, -500]
+        # Fitness function
 
         # Layers
         self.num_layers = 5
@@ -99,6 +118,7 @@ class Sensor:
         self.G = 0
         self.df = 0
         self.type = "N"
+        self.type = "N"
         self.E: float = 0
         self.id = 0
         self.dis2sink: float = 0
@@ -124,6 +144,7 @@ def create_sensors(my_model: Model):
     so Sensor[10] = 11th node = sink
     """
 
+
     # x_sink = []
     # y_sink = []
     # unf_sink = int(math.sqrt(my_model.num_sinks))
@@ -146,6 +167,19 @@ def create_sensors(my_model: Model):
     #         y_sink.append(y_val)
     x_sink = [250,125, 250, 375, 125, 375, 125, 250, 375]
     y_sink = [250,125, 125, 125, 250, 250, 375, 375, 375]
+
+    for i in range(0, my_model.num_sinks):
+        sensors[n + i].xd = x_sink[i]
+        sensors[n + i].yd = y_sink[i]
+        sensors[n + i].zd = my_model.sink_z
+        sensors[n + i].E = my_model.sinkE
+        sensors[n + i].id = my_model.n + i
+        sensors[n + i].type = "S"
+        sensors[n + i].dis2sink = 0
+        sensors[n + i].layer_number = 5
+        sensors[n + i].hop_count = 0
+
+
 
     for i in range(0, my_model.num_sinks):
         sensors[n + i].xd = x_sink[i]

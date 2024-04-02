@@ -430,6 +430,8 @@ class LEACHSimulation:
         # Selection Candidate Cluster Head Based on LEACH Set-up Phase
         # ct=1
         # for sensor in self.Sensors[:-self.my_model.num_sinks]:
+        # ct=1
+        # for sensor in self.Sensors[:-self.my_model.num_sinks]:
         #         sensor.type = 'C'
         #         self.list_CH.append(sensor)
         #         sensor.cluster_id=ct
@@ -902,6 +904,8 @@ class LEACHSimulation:
         for cluster_node in cluster_nodes:
             if cluster_node.id == node.id:
                 continue
+            if cluster_node.id == node.id:
+                continue
             distance_to_cluster_center.append(
                 (node.xd - cluster_node.xd) ** 2
                 + (node.yd - cluster_node.yd) ** 2
@@ -909,6 +913,8 @@ class LEACHSimulation:
             )
 
         for cluster_node in cluster_nodes:
+            if cluster_node.id == node.id:
+                continue
             if cluster_node.id == node.id:
                 continue
             distance_to_node = (

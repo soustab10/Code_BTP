@@ -5,7 +5,7 @@ from math import *
 
 class Model:
     def __init__(self, n):
-        self.n = 500
+        self.n = 1000
 
         # coordinates of field
         self.x = 500
@@ -92,10 +92,7 @@ class Model:
         self.layer_heights = [0, -80, -170, -270, -380, -500]
         # Fitness function
 
-        # Layers
-        self.num_layers = 5
-        self.layer_heights = [0, -80, -170, -270, -380, -500]
-        # Fitness function
+        
         self.ff_alpha = 0.5
 
         # Clusters

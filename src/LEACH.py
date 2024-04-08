@@ -43,7 +43,7 @@ avg_e2edelay_md = []
 
 class LEACHSimulation:
 
-    def __init__(self, n=1000):
+    def __init__(self, n=500):
         self.n = n  # Number of Nodes in the field
 
         self.dead_num = 0  # Number of dead nodes
@@ -118,7 +118,7 @@ class LEACHSimulation:
         self.__create_sen()
 
         self.__print_sensors()
-        # self.__plot_sensors()
+        self.__plot_sensors()
         self.__start_simulation()
 
         # self.__plot_clusters()
@@ -269,33 +269,34 @@ class LEACHSimulation:
         # print("Cluster centers:", self.cluster_centers)
         # print("----------------------------------------------")
 
-    def __plot_clusters(self, layer_number=None):
+    def __plot_clusters(self, layer_number=3):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
         cluster_sensors = {}
+        coordinates = {"x": [], "y": [], "z": []}
         ch_coordinates = {"x": [], "y": [], "z": []}
 
         for sensor in self.Sensors:
-            if sensor.cluster_id not in cluster_sensors:
-                cluster_sensors[sensor.cluster_id] = {"x": [], "y": [], "z": []}
+            if sensor.layer_number == layer_number:
+                if sensor not in self.list_CH:
+                    coordinates["x"].append(sensor.xd)
+                    coordinates["y"].append(sensor.yd)
+                    coordinates["z"].append(sensor.zd)
+                    
+                    
+                else:
+                    ch_coordinates["x"].append(sensor.xd)
+                    ch_coordinates["y"].append(sensor.yd)
+                    ch_coordinates["z"].append(sensor.zd)
 
-            cluster_sensors[sensor.cluster_id]["x"].append(sensor.xd)
-            cluster_sensors[sensor.cluster_id]["y"].append(sensor.yd)
-            cluster_sensors[sensor.cluster_id]["z"].append(sensor.zd)
-
-            if sensor.type == "C":
-                ch_coordinates["x"].append(sensor.xd)
-                ch_coordinates["y"].append(sensor.yd)
-                ch_coordinates["z"].append(sensor.zd)
-
-        for cluster_id, coordinates in cluster_sensors.items():
-            ax.scatter(
+        
+        ax.scatter(
                 coordinates["x"],
                 coordinates["y"],
                 coordinates["z"],
-                label=f"Cluster {cluster_id}",
-            )
+                label=f"Cluster",
+        )
 
         ax.scatter(
             ch_coordinates["x"],
@@ -467,7 +468,7 @@ class LEACHSimulation:
 
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
         # self.__print_sensors()
-        # self.__plot_clusters()
+        self.__plot_clusters()
 
     def __steady_state_phase_2(self, round_number):
         # print("##############################################")
@@ -922,12 +923,12 @@ class LEACHSimulation:
                 + (node.yd - cluster_node.yd) ** 2
                 + (node.zd - cluster_node.zd) ** 2
             )
-            fitness += distance_to_node  # Final Fitness Func FF
-            # fitness += (
-            #     self.my_model.ff_alpha
-            #     * (1.0 - distance_to_node / max(distance_to_cluster_center))
-            #     + (1.0 - self.my_model.ff_alpha) * node.E / self.my_model.Eo
-            # )  # Final Fitness Func FF
+            
+            fitness += (
+                self.my_model.ff_alpha
+                * (1.0 - distance_to_node / max(distance_to_cluster_center))
+                + (1.0 - self.my_model.ff_alpha) * node.E / self.my_model.Eo
+            )  # Final Fitness Func FF
 
         return fitness
 

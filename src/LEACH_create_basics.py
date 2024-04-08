@@ -5,7 +5,7 @@ from math import *
 
 class Model:
     def __init__(self, n):
-        self.n = 1000
+        self.n = 500
 
         # coordinates of field
         self.x = 500
@@ -96,7 +96,7 @@ class Model:
         self.ff_alpha = 0.5
 
         # Clusters
-        self.num_clusters = 20
+        self.num_clusters = 45
         self.clusters_per_layer = int(self.num_clusters / self.num_layers)
 
         self.num_sinks = 9

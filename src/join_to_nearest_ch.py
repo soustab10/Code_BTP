@@ -33,9 +33,9 @@ def get_min_and_id_of_ch(myModel: Model, TotalCH, distance: list):
 
 
 def start(Sensors: list[Sensor], myModel: Model, TotalCH):
-    print('# ######################################################')
-    print('# ############# Sensors join to nearest CH #############')
-    print('# ######################################################')
+    print("# ######################################################")
+    print("# ############# Sensors join to nearest CH #############")
+    print("# ######################################################")
 
     total_nodes = myModel.n
     number_of_ch = len(TotalCH)
@@ -49,7 +49,9 @@ def start(Sensors: list[Sensor], myModel: Model, TotalCH):
         for i in range(total_nodes):
             for j in range(number_of_ch):
                 distance[j][i] = sqrt(
-                    pow(Sensors[i].xd - Sensors[TotalCH[j]].xd, 2) + pow(Sensors[i].yd - Sensors[TotalCH[j]].yd, 2)
+                    pow(Sensors[i].xd - Sensors[TotalCH[j]].xd, 2)
+                    + pow(Sensors[i].yd - Sensors[TotalCH[j]].yd, 2)
+                    + pow(Sensors[i].zd - Sensors[TotalCH[j]].zd, 2)
                 )
 
         # todo: test
@@ -61,23 +63,28 @@ def start(Sensors: list[Sensor], myModel: Model, TotalCH):
         # what below does is:
         # We have stopink all CH as row and took distance between each CH and all nodes in its Columns
         # this take minimum value of each column i.e min dist for each node and that dist is dist to CH
-        min_dist_from_all_ch, id_of_min_dist_ch = get_min_and_id_of_ch(myModel, TotalCH, distance)
+        min_dist_from_all_ch, id_of_min_dist_ch = get_min_and_id_of_ch(
+            myModel, TotalCH, distance
+        )
 
         # todo: test
         print("min_dist_from_all_ch")
         print(min_dist_from_all_ch)
-        print('id_of_min_dist_ch')
+        print("id_of_min_dist_ch")
         print(id_of_min_dist_ch)
 
         # for every node, check from which
         for i, sensor in enumerate(Sensors[:-1]):
             if sensor.E > 0:
                 # if node is in RR CH and is Nearer to CH rather than Sink
-                if min_dist_from_all_ch[i] <= myModel.RR and min_dist_from_all_ch[i] < sensor.dis2sink:
+                if (
+                    min_dist_from_all_ch[i] <= myModel.RR
+                    and min_dist_from_all_ch[i] < sensor.dis2sink
+                ):
                     print(f"{sensor.id} is joining {TotalCH[id_of_min_dist_ch[i]]}")
-                    
+
                     sensor.dis2ch = min_dist_from_all_ch[i]
                 else:
                     print(f"{sensor.id} is joining sink")
-                    
+
                     sensor.dis2ch = sensor.dis2sink

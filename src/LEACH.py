@@ -444,31 +444,31 @@ class LEACHSimulation:
         # self.list_CH = []
         # self.perform_clustering(self.my_model.clusters_per_layer)
 
-        # if round_number <= 1:
-        #     self.perform_clustering()
-        # else:
-        #     cluster_ids_newch = []
-        #     for cluster_head in self.list_CH:
-        #         if (
-        #             cluster_head.E <= self.my_model.E_threshold
-        #             and cluster_head.type != "S"
-        #         ):
-        #             cluster_head.type = "N"
-        #             cluster_ids_newch.append(cluster_head.cluster_id)
+        if round_number <= 1:
+            self.perform_clustering()
+        else:
+            cluster_ids_newch = []
+            for cluster_head in self.list_CH:
+                if (
+                    cluster_head.E <= self.my_model.E_threshold
+                    and cluster_head.type != "S"
+                ):
+                    cluster_head.type = "N"
+                    cluster_ids_newch.append(cluster_head.cluster_id)
 
-        #     self.list_CH = [
-        #         ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch
-        #     ]
-        #     print(
-        #         "Cluster Head Relected ***************************************",
-        #         len(cluster_ids_newch),
-        #     )
-        #     for c_id in cluster_ids_newch:
-        #         self.perform_cluster_id_new_ch_2(c_id)
+            self.list_CH = [
+                ch for ch in self.list_CH if ch.cluster_id not in cluster_ids_newch
+            ]
+            print(
+                "Cluster Head Relected ***************************************",
+                len(cluster_ids_newch),
+            )
+            for c_id in cluster_ids_newch:
+                self.perform_cluster_id_new_ch_2(c_id)
 
         # join_to_nearest_ch.start(self.Sensors, self.my_model, self.list_CH)
         # self.__print_sensors()
-        self.__plot_clusters()
+        # self.__plot_clusters()
 
     def __steady_state_phase_2(self, round_number):
         # print("##############################################")
@@ -485,32 +485,32 @@ class LEACHSimulation:
             sender = None
             receiver = None
             if sensor.type == "N":
-                # receiver = [
-                #         node
-                #         for node in self.Sensors
-                #         if node.cluster_id == sensor.cluster_id and node.type == "C"
-                #     ][0]
-                # sender = sensor
-                # distance_route += sqrt(
-                #         pow((sender.xd - receiver.xd), 2)
-                #         + pow((sender.yd - receiver.yd), 2)
-                #         + pow((sender.zd - receiver.zd), 2)
-                #     )
-                # node_route += 1
-                # self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
-                #         self.Sensors,
-                #         self.my_model,
-                #         [sender],
-                #         [receiver],
-                #         self.srp,
-                #         self.rrp,
-                #         self.sdp,
-                #         self.rdp,
-                #         packet_type="Data",
-                #     )
+                receiver = [
+                        node
+                        for node in self.Sensors
+                        if node.cluster_id == sensor.cluster_id and node.type == "C"
+                    ][0]
+                sender = sensor
+                distance_route += sqrt(
+                        pow((sender.xd - receiver.xd), 2)
+                        + pow((sender.yd - receiver.yd), 2)
+                        + pow((sender.zd - receiver.zd), 2)
+                    )
+                node_route += 1
+                self.srp, self.rrp, self.sdp, self.rdp = send_receive_packets.start(
+                        self.Sensors,
+                        self.my_model,
+                        [sender],
+                        [receiver],
+                        self.srp,
+                        self.rrp,
+                        self.sdp,
+                        self.rdp,
+                        packet_type="Data",
+                    )
 
                 is_sent_to_sink = False
-                sender = sensor  # CH is the new sender now
+                sender = receiver  # CH is the new sender now
                 while is_sent_to_sink != True:
 
                     # nearest_receiver = self.find_valid_receiver_5(sender)
@@ -580,7 +580,7 @@ class LEACHSimulation:
                         node_route += 1
                         self.avg_e2edelay[round_number] += (
                             distance_route / self.my_model.speed_sound
-                            + 0.1 * node_route
+                            + 0.02 * node_route
                         )
                         self.pkt_count[round_number] += 1
 
@@ -1085,9 +1085,9 @@ class LEACHSimulation:
         # Implement Selction Function
         optimal_receiver = None
         min_value = float("inf")  # Initialize with infinity
-        alpha = 0.0
-        beta = 0.5
-        gamma = 0.5
+        alpha = 0.4
+        beta = 0.3
+        gamma = 0.3
         base_distance = self.my_model.z * sqrt(3) / 5
         for receiver in receivers:
             depth_diff = abs(sender.zd - receiver.zd) / abs(self.my_model.z)

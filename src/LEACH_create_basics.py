@@ -26,42 +26,29 @@ class Model:
         # Optimal Election Probability of a node to become cluster head
         self.p: float = 0.1
 
-        self.tx_range = 100
+        self.tx_range = 50
         self.freq = 10000
         self.data_rate = 35000
         self.freq = 10000
         self.data_rate = 35000
         self.f_khz = 10
-        self.alpha_f = (
-            0.11 * self.f_khz**2 / (1 + self.f_khz**2)
-            + 44 * self.f_khz**2 / (4100 + self.f_khz**2)
-            + 0.003
-            + 2.75e-4 * self.f_khz**2
-        )
-        # self.num_clusters =
-        self.alpha_f = (
-            0.11 * self.f_khz**2 / (1 + self.f_khz**2)
-            + 44 * self.f_khz**2 / (4100 + self.f_khz**2)
-            + 0.003
-            + 2.75e-4 * self.f_khz**2
-        )
+
         # self.num_clusters =
         # %%%%%%%%%%% Energy Model (all values in Joules and each value is for 1byte of data) %%%%%%%%%%%
         # Initial Energy
-        self.Eo: float = 15
+        self.Eo: float = 50
         self.E_threshold = 0.40 * self.Eo
         # ETX = Energy dissipated in Transmission, ERX = in Receive
-        self.Eelec: float = 50 * 0.000000001
-        self.ETX: float = 10 * 10e-12
+        self.Eelec: float = 50 * 10e-9
         self.ETX: float = 10 * 10e-12
         self.ERX: float = 10 * 10e-12
 
         # Transmit Amplifier types
         self.Efs: float = 10e-11
-        self.Emp: float = 0.0013 * 0.000000000001
+        self.Emp: float = 0.0013 * 10e-12
 
         # Data Aggregation Energy
-        self.EDA: float = 5 * 0.000000001
+        self.EDA: float = 5 * 10e-9
 
         # Computation of do
         self.do: float = sqrt(self.Efs / self.Emp)
@@ -71,7 +58,7 @@ class Model:
         # maximum number of rounds
         self.rmax = 750
         # Data packet size
-        self.data_packet_len = 200
+        self.data_packet_len = 240
 
         # Hello packet size
         self.hello_packet_len = 4
@@ -82,6 +69,21 @@ class Model:
         # Radio Range
         self.RR: float = self.tx_range
 
+                # alpha by thorp
+        self.alpha_f_khz = (
+            (0.1 * self.f_khz**2 / (1 + self.f_khz**2))
+            + (40 * self.f_khz**2 / (4100 + self.f_khz**2))
+            + 0.003
+            + (2.75 * self.f_khz**2 / 10000)
+        )
+        # self.num_clusters =
+        self.alpha_f = (
+            (0.1 * self.f_khz**2 / (1 + self.f_khz**2))
+            + (40 * self.f_khz**2 / (4100 + self.f_khz**2))
+            + 0.003
+            + (2.75 * self.f_khz**2 / 10000)
+        )
+        
         self.attn = 10 ** (self.alpha_f / 10)
         self.attn = 10 ** (self.alpha_f / 10)
 
@@ -92,14 +94,47 @@ class Model:
         self.layer_heights = [0, -80, -170, -270, -380, -500]
         # Fitness function
 
-        
         self.ff_alpha = 0.5
 
         # Clusters
-        self.num_clusters = 45
+        self.num_clusters = 20
         self.clusters_per_layer = int(self.num_clusters / self.num_layers)
 
         self.num_sinks = 9
+        # transmitter power
+        self.p_t = 70 * 10e-3
+        # receiver power
+        self.p_r = 16 * 10e-3
+        # shipping factor
+        self.s_factor = 0.5
+        # wind speed
+        self.wind_speed = 6
+        # bandwidth
+        self.bandwidth = 4 * 1000
+
+
+
+        # transmission loss
+
+        # noise loss params
+        self.nsf = (40 + 20 * (self.s_factor - 0.5) + 26 * log10(self.freq)) / 10
+        self.ntf = (17 - 30 * log10(self.freq)) / 10
+        self.nthf = (-15 + 20 * log10(self.freq)) / 10
+        self.nwf = (
+            50
+            + 7.5 * sqrt(self.wind_speed)
+            + 20 * log10(self.freq)
+            - 40 * log10(self.freq + 0.4)
+        ) / 10
+        # noise loss
+        self.noise_loss = self.nsf + self.ntf + self.nthf + self.nwf
+
+        # signal to noise ratio params
+        self.int_t = self.p_t / (4 * math.pi * 20)
+        self.sl = 10 * log10(self.int_t / (0.067 * 10e-18))
+        self.transmission_loss = 20 * log10(self.tx_range) + (self.alpha_f * 10e-3)
+        # signal to noise ratio
+        self.snr = self.sl - self.noise_loss - self.transmission_loss
 
         # self.numRx = int(sqrt(self.p * self.n))
         # self.dr = x / self.numRx
@@ -141,7 +176,6 @@ def create_sensors(my_model: Model):
     so Sensor[10] = 11th node = sink
     """
 
-
     # x_sink = []
     # y_sink = []
     # unf_sink = int(math.sqrt(my_model.num_sinks))
@@ -162,8 +196,8 @@ def create_sensors(my_model: Model):
     #     for y_val in x_values:
     #         x_sink.append(x_val)
     #         y_sink.append(y_val)
-    x_sink = [250,125, 250, 375, 125, 375, 125, 250, 375]
-    y_sink = [250,125, 125, 125, 250, 250, 375, 375, 375]
+    x_sink = [250, 125, 250, 375, 125, 375, 125, 250, 375]
+    y_sink = [250, 125, 125, 125, 250, 250, 375, 375, 375]
 
     for i in range(0, my_model.num_sinks):
         sensors[n + i].xd = x_sink[i]
@@ -175,8 +209,6 @@ def create_sensors(my_model: Model):
         sensors[n + i].dis2sink = 0
         sensors[n + i].layer_number = 5
         sensors[n + i].hop_count = 0
-
-
 
     for i in range(0, my_model.num_sinks):
         sensors[n + i].xd = x_sink[i]
